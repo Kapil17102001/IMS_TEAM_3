@@ -14,6 +14,7 @@ app = FastAPI(
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-@app.get("/")
+@app.get("/health")
 def root():
-    return {"message": "Welcome to the Production FastAPI Base Data"}
+    return {"message": "Welcome to the Intern Management System ",
+    "status":"good"}
