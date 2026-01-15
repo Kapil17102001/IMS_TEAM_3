@@ -1,5 +1,6 @@
+from app.api.api_v1.endpoints import  interns
 from fastapi import APIRouter
-from app.api.api_v1.endpoints import demo
 
 api_router = APIRouter()
-api_router.include_router(demo.router, prefix="/demo", tags=["demo"])
+api_router.include_router(interns.router, prefix="/interns", tags=["interns"])
+

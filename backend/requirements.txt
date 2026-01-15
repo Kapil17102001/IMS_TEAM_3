@@ -6,3 +6,6 @@ sqlalchemy>=2.0.0
 alembic
 python-multipart
 httpx
+psycopg2-binary
+pydantic
+pydantic[email-validator]
