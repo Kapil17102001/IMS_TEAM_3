@@ -28,7 +28,7 @@ interface MainLayoutProps {
 }
 
 export function MainLayout({ children }: MainLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
 
@@ -46,28 +46,32 @@ export function MainLayout({ children }: MainLayoutProps) {
       {/* Sidebar */}
       <aside
         className={`${
-          sidebarOpen ? "w-64" : "w-20"
-        } bg-sidebar-background text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 flex flex-col`}
+          sidebarOpen ? "w-64" : "w-16"
+        } bg-card text-card-foreground border-r border-border transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}
+        // onMouseEnter={() => setSidebarOpen(true)}
+        // onMouseLeave={() => setSidebarOpen(false)}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-sidebar-border">
+        <div className="p-4 border-b border-border flex items-center justify-center h-16">
           <Link
             to="/"
-            className="flex items-center justify-center gap-2 group"
+            className="flex items-center gap-2 group"
           >
-            <div className="w-10 h-10 bg-sidebar-primary rounded-lg flex items-center justify-center group-hover:opacity-80 transition-opacity">
-              <span className="text-sidebar-primary-foreground font-bold text-lg">
+            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center group-hover:opacity-80 transition-opacity flex-shrink-0">
+              <span className="text-primary-foreground font-bold text-lg">
                 IMS
               </span>
             </div>
-            {sidebarOpen && (
-              <span className="font-bold text-lg hidden sm:inline">IMS</span>
-            )}
+            <span className={`font-bold text-lg whitespace-nowrap transition-all duration-300 ease-in-out ${
+              sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
+            }`}>
+              IMS
+            </span>
           </Link>
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-6 space-y-2">
+        <nav className="flex-1 px-2 py-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.href);
@@ -75,54 +79,55 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-300 ease-in-out ${
                   active
-                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                    : "hover:bg-sidebar-accent text-sidebar-foreground"
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-accent hover:text-accent-foreground text-card-foreground"
                 }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
+                <span className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${
+                  sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
+                }`}>
+                  {item.label}
+                </span>
               </Link>
             );
           })}
         </nav>
-
-        {/* Toggle Button */}
-        <div className="p-3 border-t border-sidebar-border">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="w-full flex items-center justify-center p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
-            title={sidebarOpen ? "Collapse" : "Expand"}
-          >
-            {sidebarOpen ? (
-              <X className="w-5 h-5" />
-            ) : (
-              <Menu className="w-5 h-5" />
-            )}
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Navbar */}
-        <header className="bg-background border-b border-border px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-muted rounded-lg transition-colors"
-            >
-              {sidebarOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </button>
-            <h1 className="text-2xl font-bold text-foreground">
+        <header className="bg-background border-b border-border px-6 py-3 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-6">
+            <h1 className="text-xl font-bold text-foreground">
               Intern Management System
             </h1>
+            
+            {/* Top Navigation Items */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    to={item.href}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                      active
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted text-foreground"
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
           <div className="flex items-center gap-4">
