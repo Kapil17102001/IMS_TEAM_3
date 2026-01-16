@@ -23,8 +23,8 @@ class Settings(BaseSettings):
     VALIDATE_CERTS: bool = True
 
     # MICROSOFT GRAPH CONFIGURATION
-    GRAPH_CLIENT_ID: str = "ad7225fd-6e35-4d6d-9a6c-726ea235346f"  # Replace with valid Client ID
-    GRAPH_TENANT_ID: str = "consumers"       # "consumers" for personal accounts, or Tenant ID for orgs
+    GRAPH_CLIENT_ID: str = ""  # Replace with valid Client ID
+    GRAPH_TENANT_ID: str = ""       # "consumers" for personal accounts, or Tenant ID for orgs
     GRAPH_USER_SCOPES: list[str] = ["Mail.Send"]
 
     @property
