@@ -5,11 +5,27 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # POSTGRES CONFIGURATION
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "app"
-    POSTGRES_PORT: str = "5432"
+    POSTGRES_SERVER: str = ""
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
+    POSTGRES_PORT: str = ""
+
+    # EMAIL CONFIGURATION
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: str = ""
+    MAIL_PORT: int = 587
+    MAIL_SERVER: str = "smtp.office365.com"
+    MAIL_STARTTLS: bool = True
+    MAIL_SSL_TLS: bool = False
+    USE_CREDENTIALS: bool = True
+    VALIDATE_CERTS: bool = True
+
+    # MICROSOFT GRAPH CONFIGURATION
+    GRAPH_CLIENT_ID: str = ""  # Replace with valid Client ID
+    GRAPH_TENANT_ID: str = ""       # "consumers" for personal accounts, or Tenant ID for orgs
+    GRAPH_USER_SCOPES: list[str] = ["Mail.Send"]
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
