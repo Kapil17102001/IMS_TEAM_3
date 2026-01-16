@@ -9,3 +9,4 @@ httpx
 psycopg2-binary
 pydantic
 pydantic[email-validator]
+pydantic[email]
