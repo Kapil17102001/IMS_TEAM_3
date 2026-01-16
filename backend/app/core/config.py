@@ -5,16 +5,16 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     
     # POSTGRES CONFIGURATION
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "postgres"
-    POSTGRES_PASSWORD: str = "password"
-    POSTGRES_DB: str = "app"
-    POSTGRES_PORT: str = "5432"
+    POSTGRES_SERVER: str = ""
+    POSTGRES_USER: str = ""
+    POSTGRES_PASSWORD: str = ""
+    POSTGRES_DB: str = ""
+    POSTGRES_PORT: str = ""
 
     # EMAIL CONFIGURATION
-    MAIL_USERNAME: str = "saini17102001@outlook.com"
-    MAIL_PASSWORD: str = "rgouemvjrebifphi"
-    MAIL_FROM: str = "saini17102001@outlook.com"
+    MAIL_USERNAME: str = ""
+    MAIL_PASSWORD: str = ""
+    MAIL_FROM: str = ""
     MAIL_PORT: int = 587
     MAIL_SERVER: str = "smtp.office365.com"
     MAIL_STARTTLS: bool = True
