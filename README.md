@@ -54,7 +54,7 @@ Frontend (UI)
      ↓
 Backend API (FastAPI / Spring Boot)
      ↓
-Snowflake Data Platform
+Snowflake Data Platform/ Postgres Database
  ├── Structured Tables
  ├── JSON (VARIANT) Data
  ├── Document Stages
