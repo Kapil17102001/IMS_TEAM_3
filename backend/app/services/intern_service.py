@@ -21,7 +21,11 @@ class InternService:
             department=intern_in.department,
             start_date=intern_in.start_date,
             end_date=intern_in.end_date,
-            status=intern_in.status
+            status=intern_in.status,
+            address=intern_in.address,
+            job_position=intern_in.job_position,
+            salary = intern_in.salary,
+            gender = intern_in.gender,
         )
         db.add(db_intern)
         db.commit()

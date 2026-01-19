@@ -1,7 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from datetime import date
-from app.models.intern import InternStatus
+from app.models.intern import InternStatus,Gender
 
 class InternBase(BaseModel):
     full_name: Optional[str] = None
@@ -11,6 +11,10 @@ class InternBase(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
     status: Optional[InternStatus] = InternStatus.ONBOARDING
+    address: Optional[str]
+    job_position: Optional[str]
+    salary: Optional[str]
+    gender: Optional[Gender]
 
 class InternCreate(InternBase):
     full_name: str
@@ -34,6 +38,7 @@ class Intern(InternBase):
                 "start_date": "2024-01-15",
                 "end_date": "2024-06-15",
                 "status": "onboarding"
+                
             }
         }
     

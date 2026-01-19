@@ -70,6 +70,9 @@ coverage.xml
 *.sqlite3
 backend/sql_app.db
 
+# Token Cache
+backend/token_cache.bin
+
 # Frontend Build
 frontend/dist/
 frontend/build/

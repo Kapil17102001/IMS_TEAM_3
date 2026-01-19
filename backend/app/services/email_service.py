@@ -3,7 +3,9 @@ import requests
 import os
 import atexit
 import json
+import base64
 from typing import List, Optional
+from pathlib import Path
 from app.core.config import settings
 from app.core.logger import logger
 
@@ -88,10 +90,20 @@ class EmailService:
         html_content: str,
         cc: Optional[List[str]] = None,
         bcc: Optional[List[str]] = None,
-        content_type: str = "HTML"
+        content_type: str = "HTML",
+        attachments: Optional[List[str]] = None
     ) -> bool:
         """
         Send an email using Microsoft Graph API
+        
+        Args:
+            email_to: List of recipient email addresses
+            subject: Email subject
+            html_content: Email body content
+            cc: List of CC email addresses
+            bcc: List of BCC email addresses
+            content_type: Content type (HTML or Text)
+            attachments: List of file paths to attach (e.g., generated DOCX files)
         """
         access_token = self._get_access_token()
         if not access_token:
@@ -101,6 +113,29 @@ class EmailService:
         to_recipients = [{"emailAddress": {"address": email}} for email in email_to]
         cc_recipients = [{"emailAddress": {"address": email}} for email in (cc or [])]
         bcc_recipients = [{"emailAddress": {"address": email}} for email in (bcc or [])]
+
+        # Prepare attachments
+        attachment_data = []
+        if attachments:
+            for file_path in attachments:
+                try:
+                    file_path_obj = Path(file_path)
+                    if not file_path_obj.exists():
+                        logger.error(f"Attachment file not found: {file_path}")
+                        continue
+                    
+                    with open(file_path, "rb") as f:
+                        file_content = f.read()
+                        encoded_content = base64.b64encode(file_content).decode("utf-8")
+                    
+                    attachment_data.append({
+                        "@odata.type": "#microsoft.graph.fileAttachment",
+                        "name": file_path_obj.name,
+                        "contentBytes": encoded_content
+                    })
+                    logger.info(f"Added attachment: {file_path_obj.name}")
+                except Exception as e:
+                    logger.error(f"Failed to attach file {file_path}: {str(e)}")
 
         email_data = {
             "message": {
@@ -115,6 +150,10 @@ class EmailService:
             },
             "saveToSentItems": "true"
         }
+        
+        # Add attachments if any were successfully processed
+        if attachment_data:
+            email_data["message"]["attachments"] = attachment_data
 
         endpoint = "https://graph.microsoft.com/v1.0/me/sendMail"
         headers = {

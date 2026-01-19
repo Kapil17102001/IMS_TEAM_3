@@ -11,11 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, CheckCircle, Upload } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const DEPARTMENTS = ["Engineering", "Design", "Analytics", "Quality Assurance", "Product"];
+const DEPARTMENTS = ["COE", "Engineering", "Design", "Analytics", "Quality Assurance", "Product"];
 const ROLES = [
+  "Intern",
   "Frontend Developer",
   "Backend Developer",
   "Full Stack Developer",
@@ -23,26 +25,17 @@ const ROLES = [
   "Data Analyst",
   "QA Engineer",
 ];
-const SKILLS = [
-  "React",
-  "TypeScript",
-  "Node.js",
-  "Python",
-  "PostgreSQL",
-  "Docker",
-  "Tailwind CSS",
-  "UI Design",
-  "Figma",
-  "JavaScript",
-];
 
 interface FormData {
-  name: string;
+  full_name: string;
   email: string;
-  role: string;
+  university: string;
   department: string;
-  startDate: string;
-  skills: string[];
+  start_date: string;
+  end_date: string;
+  address: string;
+  job_position: string;
+  gender: string;
 }
 
 interface SubmitState {
@@ -53,15 +46,17 @@ interface SubmitState {
 export default function Onboarding() {
   const { toast } = useToast();
   const [formData, setFormData] = useState<FormData>({
-    name: "",
+    full_name: "",
     email: "",
-    role: "",
+    university: "",
     department: "",
-    startDate: "",
-    skills: [],
+    start_date: "",
+    end_date: "",
+    address: "",
+    job_position: "",
+    gender: "",
   });
 
-  const [resume, setResume] = useState<File | null>(null);
   const [submitState, setSubmitState] = useState<SubmitState>({ type: "idle", message: "" });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -74,51 +69,46 @@ export default function Onboarding() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleSkill = (skill: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: prev.skills.includes(skill)
-        ? prev.skills.filter((s) => s !== skill)
-        : [...prev.skills, skill],
-    }));
-  };
-
-  const handleResumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file && file.type === "application/pdf") {
-      setResume(file);
-    } else {
-      toast({
-        title: "Invalid file",
-        description: "Please upload a PDF file",
-        variant: "destructive",
-      });
-    }
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const validateForm = (): boolean => {
-    if (!formData.name.trim()) {
-      setSubmitState({ type: "error", message: "Name is required" });
+    if (!formData.full_name.trim()) {
+      setSubmitState({ type: "error", message: "Full name is required" });
       return false;
     }
     if (!formData.email.trim() || !formData.email.includes("@")) {
       setSubmitState({ type: "error", message: "Valid email is required" });
       return false;
     }
-    if (!formData.role) {
-      setSubmitState({ type: "error", message: "Role is required" });
+    if (!formData.university.trim()) {
+      setSubmitState({ type: "error", message: "University is required" });
       return false;
     }
     if (!formData.department) {
       setSubmitState({ type: "error", message: "Department is required" });
       return false;
     }
-    if (!formData.startDate) {
+    if (!formData.job_position) {
+      setSubmitState({ type: "error", message: "Job position is required" });
+      return false;
+    }
+    if (!formData.start_date) {
       setSubmitState({ type: "error", message: "Start date is required" });
       return false;
     }
-    if (formData.skills.length === 0) {
-      setSubmitState({ type: "error", message: "Select at least one skill" });
+    if (!formData.end_date) {
+      setSubmitState({ type: "error", message: "End date is required" });
+      return false;
+    }
+    if (!formData.address.trim()) {
+      setSubmitState({ type: "error", message: "Address is required" });
+      return false;
+    }
+    if (!formData.gender) {
+      setSubmitState({ type: "error", message: "Gender is required" });
       return false;
     }
     return true;
@@ -134,28 +124,79 @@ export default function Onboarding() {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      const payload = {
+        full_name: formData.full_name,
+        email: formData.email,
+        university: formData.university,
+        department: formData.department,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        status: "onboarding", // Hidden field, always set to onboarding
+        address: formData.address,
+        job_position: formData.job_position,
+        salary: "25,000", // Hidden field, default value
+        gender: formData.gender,
+      };
 
-    setIsLoading(false);
-    setSubmitState({
-      type: "success",
-      message: `${formData.name} has been onboarded successfully!`,
-    });
-
-    // Reset form
-    setTimeout(() => {
-      setFormData({
-        name: "",
-        email: "",
-        role: "",
-        department: "",
-        startDate: "",
-        skills: [],
+      const response = await fetch("http://localhost:8000/api/v1/interns/", {
+        method: "POST",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
-      setResume(null);
-      setSubmitState({ type: "idle", message: "" });
-    }, 3000);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to onboard intern");
+      }
+
+      const result = await response.json();
+      
+      setIsLoading(false);
+      setSubmitState({
+        type: "success",
+        message: `${formData.full_name} has been onboarded successfully! Offer letter sent to ${formData.email}`,
+      });
+
+      toast({
+        title: "Success!",
+        description: `${formData.full_name} has been onboarded successfully`,
+        variant: "success"
+      });
+
+      // Reset form
+      setTimeout(() => {
+        setFormData({
+          full_name: "",
+          email: "",
+          university: "",
+          department: "",
+          start_date: "",
+          end_date: "",
+          address: "",
+          job_position: "",
+          gender: "",
+        });
+        setSubmitState({ type: "idle", message: "" });
+      }, 3000);
+
+    } catch (error) {
+      setIsLoading(false);
+      const errorMessage = error instanceof Error ? error.message : "Failed to onboard intern";
+      setSubmitState({
+        type: "error",
+        message: errorMessage,
+      });
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -189,17 +230,17 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* Name */}
+            {/* Full Name */}
             <div>
-              <Label htmlFor="name" className="text-sm font-medium">
+              <Label htmlFor="full_name" className="text-sm font-medium">
                 Full Name <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="name"
-                name="name"
+                id="full_name"
+                name="full_name"
                 type="text"
-                placeholder="John Doe"
-                value={formData.name}
+                placeholder="Your Name Here"
+                value={formData.full_name}
                 onChange={handleInputChange}
                 className="mt-2"
               />
@@ -214,22 +255,38 @@ export default function Onboarding() {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="john@example.com"
+                placeholder="example@example.com"
                 value={formData.email}
                 onChange={handleInputChange}
                 className="mt-2"
               />
             </div>
 
-            {/* Role and Department */}
+            {/* University */}
+            <div>
+              <Label htmlFor="university" className="text-sm font-medium">
+                University <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="university"
+                name="university"
+                type="text"
+                placeholder="university Here"
+                value={formData.university}
+                onChange={handleInputChange}
+                className="mt-2"
+              />
+            </div>
+
+            {/* Job Position and Department */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="role" className="text-sm font-medium">
-                  Role <span className="text-destructive">*</span>
+                <Label htmlFor="job_position" className="text-sm font-medium">
+                  Job Position <span className="text-destructive">*</span>
                 </Label>
-                <Select value={formData.role} onValueChange={(value) => handleSelectChange("role", value)}>
-                  <SelectTrigger id="role" className="mt-2">
-                    <SelectValue placeholder="Select a role" />
+                <Select value={formData.job_position} onValueChange={(value) => handleSelectChange("job_position", value)}>
+                  <SelectTrigger id="job_position" className="mt-2">
+                    <SelectValue placeholder="Select a position" />
                   </SelectTrigger>
                   <SelectContent>
                     {ROLES.map((role) => (
@@ -263,75 +320,69 @@ export default function Onboarding() {
               </div>
             </div>
 
-            {/* Start Date */}
+            {/* Start and End Date */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <Label htmlFor="start_date" className="text-sm font-medium">
+                  Start Date <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="start_date"
+                  name="start_date"
+                  type="date"
+                  value={formData.start_date}
+                  onChange={handleInputChange}
+                  className="mt-2"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="end_date" className="text-sm font-medium">
+                  End Date <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="end_date"
+                  name="end_date"
+                  type="date"
+                  value={formData.end_date}
+                  onChange={handleInputChange}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
+            {/* Address */}
             <div>
-              <Label htmlFor="startDate" className="text-sm font-medium">
-                Start Date <span className="text-destructive">*</span>
+              <Label htmlFor="address" className="text-sm font-medium">
+                Address <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="startDate"
-                name="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={handleInputChange}
-                className="mt-2"
+              <Textarea
+                id="address"
+                name="address"
+                placeholder="Address Here"
+                value={formData.address}
+                onChange={handleTextareaChange}
+                className="mt-2 min-h-[80px]"
               />
             </div>
 
-            {/* Skills */}
+            {/* Gender */}
             <div>
-              <Label className="text-sm font-medium">
-                Skills <span className="text-destructive">*</span>
+              <Label htmlFor="gender" className="text-sm font-medium">
+                Gender <span className="text-destructive">*</span>
               </Label>
-              <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
-                {SKILLS.map((skill) => (
-                  <button
-                    key={skill}
-                    type="button"
-                    onClick={() => toggleSkill(skill)}
-                    className={`px-4 py-2 rounded-lg font-medium text-sm transition-all duration-200 border ${
-                      formData.skills.includes(skill)
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-muted border-border hover:border-primary hover:bg-muted/50"
-                    }`}
-                  >
-                    {skill}
-                  </button>
-                ))}
-              </div>
-              {formData.skills.length > 0 && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  Selected {formData.skills.length} skill{formData.skills.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </div>
-
-            {/* Resume Upload */}
-            <div>
-              <Label htmlFor="resume" className="text-sm font-medium">
-                Resume <span className="text-muted-foreground">(Optional)</span>
-              </Label>
-              <div className="mt-2 relative">
-                <input
-                  id="resume"
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleResumeChange}
-                  className="hidden"
-                />
-                <label
-                  htmlFor="resume"
-                  className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-border rounded-lg cursor-pointer hover:border-primary hover:bg-muted/50 transition-all"
-                >
-                  <Upload className="w-5 h-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">
-                      {resume ? resume.name : "Click to upload PDF"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">PDF only, max 10MB</p>
-                  </div>
-                </label>
-              </div>
+              <Select
+                value={formData.gender}
+                onValueChange={(value) => handleSelectChange("gender", value)}
+              >
+                <SelectTrigger id="gender" className="mt-2">
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Submit Button */}
