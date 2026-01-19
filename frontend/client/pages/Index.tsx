@@ -3,13 +3,23 @@ import { MainLayout } from "../components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Users, BarChart3, BookOpen, CheckSquare } from "lucide-react";
-import { mockInterns, mockTasks } from "../mock-data";
+import { useInterns } from "../context/InternsContext";
 
 export default function Index() {
-  const totalInterns = mockInterns.length;
-  const goodPerformance = mockInterns.filter((i) => i.status === "good").length;
-  const tasksInProgress = mockTasks.filter((t) => t.status === "in-progress").length;
-  const completedTasks = mockTasks.filter((t) => t.status === "done").length;
+  const { interns, loading, error } = useInterns();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  const totalInterns = interns.length;
+  const goodPerformance = interns.filter((i) => i.status === "good").length;
+  const tasksInProgress = 0; // mockTasks.filter((t) => t.status === "in-progress").length;
+  const completedTasks = 0; // mockTasks.filter((t) => t.status === "done").length;
 
   return (
     <MainLayout>
@@ -40,7 +50,7 @@ export default function Index() {
             </div>
             <p className="text-3xl font-bold text-success">{goodPerformance}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {Math.round((goodPerformance / totalInterns) * 100)}% of interns
+              {totalInterns > 0 ? Math.round((goodPerformance / totalInterns) * 100) : 0}% of interns
             </p>
           </Card>
 
@@ -125,16 +135,16 @@ export default function Index() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {mockInterns.slice(0, 3).map((intern) => (
+            {interns.slice(0, 3).map((intern) => (
               <Card key={intern.id} className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center font-bold text-primary">
-                      {intern.name.charAt(0)}
+                      {intern.full_name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{intern.name}</h3>
-                      <p className="text-sm text-muted-foreground">{intern.role}</p>
+                      <h3 className="font-semibold text-foreground">{intern.full_name}</h3>
+                      <p className="text-sm text-muted-foreground">{intern.job_position}</p>
                     </div>
                   </div>
                 </div>
@@ -144,22 +154,12 @@ export default function Index() {
                     <span className="font-medium">{intern.department}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Mentor:</span>
-                    <span className="font-medium">{intern.mentor}</span>
+                    <span className="text-muted-foreground">Email:</span>
+                    <span className="font-medium">{intern.email}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Performance:</span>
-                    <span
-                      className={`font-bold ${
-                        intern.performanceScore >= 80
-                          ? "text-success"
-                          : intern.performanceScore >= 70
-                          ? "text-warning"
-                          : "text-destructive"
-                      }`}
-                    >
-                      {intern.performanceScore}%
-                    </span>
+                    <span className="text-muted-foreground">Status:</span>
+                    <span className="font-medium">{intern.status}</span>
                   </div>
                 </div>
               </Card>
