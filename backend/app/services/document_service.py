@@ -19,7 +19,7 @@ class DocumentService:
         self.output_path = self.base_path / "generated"
         
         # Create output directory if it doesn't exist
-        self.output_path.mkdir(exist_ok=True)
+        self.output_path.mkdir(parents=True, exist_ok=True)
     
     def _format_date(self, date_obj: Optional[date]) -> str:
         """Format date object to string format."""
