@@ -12,3 +12,5 @@ pydantic[email-validator]
 pydantic[email]
 docxtpl
 msal
+pyjwt
+argon2-cffi
