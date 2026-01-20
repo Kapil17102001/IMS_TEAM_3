@@ -31,12 +31,12 @@ export function KanbanCard({
   const intern = mockInterns.find((i) => i.id === task.assignedIntern);
 
   const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
+    switch (priority.toUpperCase()) {
+      case "HIGH":
         return "bg-destructive/10 text-destructive border-destructive/20";
-      case "medium":
+      case "MEDIUM":
         return "bg-warning/10 text-warning border-warning/20";
-      case "low":
+      case "LOW":
         return "bg-muted text-muted-foreground border-border";
       default:
         return "bg-muted text-muted-foreground border-border";
@@ -44,7 +44,7 @@ export function KanbanCard({
   };
 
   const getPriorityIcon = (priority: string) => {
-    if (priority === "high" || priority === "medium") {
+    if (priority.toUpperCase() === "HIGH" || priority.toUpperCase() === "MEDIUM") {
       return <Flag className="w-3 h-3" />;
     }
     return null;
@@ -56,7 +56,7 @@ export function KanbanCard({
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
 
   return (
     <Card
@@ -83,14 +83,14 @@ export function KanbanCard({
       <div className="flex items-center gap-2 mb-3">
         <Badge variant="outline" className={`text-xs gap-1 ${getPriorityColor(task.priority)}`}>
           {getPriorityIcon(task.priority)}
-          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+          {task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase()}
         </Badge>
 
-        {task.dueDate && (
+        {task.due_date && (
           <div className={`flex items-center gap-1 text-xs ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
             <Calendar className="w-3 h-3" />
             <span className={isOverdue ? "font-semibold" : ""}>
-              {formatDate(task.dueDate)}
+              {formatDate(task.due_date)}
             </span>
           </div>
         )}
@@ -116,7 +116,7 @@ export function KanbanCard({
       {/* Actions */}
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">
-          ID: {task.id.substring(5, 10)}
+          ID: {task.id}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

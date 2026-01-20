@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AlertCircle, Trash2 } from "lucide-react";
+import axios from "axios";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -39,8 +40,8 @@ export function TaskModal({
     title: "",
     description: "",
     assignedIntern: "",
-    priority: "medium" as "low" | "medium" | "high",
-    status: "todo" as "todo" | "in-progress" | "review" | "done",
+    priority: "medium" as "LOW" | "MEDIUM" | "HIGH",
+    status: "todo" as "TODO"  | "IN_PROGRESS" | "DONE" ,
     dueDate: "",
   });
 
@@ -52,7 +53,7 @@ export function TaskModal({
         title: task.title,
         description: task.description || "",
         assignedIntern: task.assignedIntern,
-        priority: task.priority,
+        priority: task.priority as "LOW" | "MEDIUM" | "HIGH",
         status: task.status as any,
         dueDate: task.dueDate || "",
       });
@@ -61,8 +62,8 @@ export function TaskModal({
         title: "",
         description: "",
         assignedIntern: "",
-        priority: "medium",
-        status: "todo",
+        priority: "MEDIUM",
+        status: "TODO",
         dueDate: "",
       });
     }
@@ -83,14 +84,29 @@ export function TaskModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!validateForm()) {
       return;
     }
 
-    onSave(formData);
+    try {
+      const response = await axios.post("http://localhost:8000/api/v1/tasks/tasks?user_id=1", {
+        title: formData.title,
+        description: formData.description,
+        status: formData.status.toUpperCase(),
+        position: 0, // Assuming position is 0 for new tasks
+        due_date: formData.dueDate,
+        priority: formData.priority,
+        assigned_interns: formData.assignedIntern ? [parseInt(formData.assignedIntern)] : [],
+      });
+
+      onSave(response.data);
+      onClose();
+    } catch (error) {
+      console.error("Error creating task:", error);
+    }
   };
 
   return (
@@ -190,9 +206,9 @@ export function TaskModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="LOW">Low</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HIGH">High</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -212,10 +228,10 @@ export function TaskModal({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="todo">To Do</SelectItem>
-                <SelectItem value="in-progress">In Progress</SelectItem>
-                <SelectItem value="review">Review</SelectItem>
-                <SelectItem value="done">Done</SelectItem>
+                <SelectItem value="TODO">To Do</SelectItem>
+                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                <SelectItem value="DONE">Done</SelectItem>
+                <SelectItem value ="REVIEW">Review</SelectItem>
               </SelectContent>
             </Select>
           </div>

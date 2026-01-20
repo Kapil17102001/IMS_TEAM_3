@@ -20,7 +20,7 @@ try:
     logger.info("SessionLocal configured successfully")
 
 except Exception as e:
-    logger.error(f"Error connecting to database: {e}", exc_info=True)
+    logger.error(f"Error connecting to database: {e}")
     raise
 
 

@@ -1,25 +1,26 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import axios from "axios";
 import { Task } from "../../types";
 import { KanbanColumn } from "./KanbanColumn";
 import { TaskModal } from "./TaskModal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
-type TaskStatus = "todo" | "in-progress" | "review" | "done";
+type TaskStatus = "todo" | "in_progress" | "review" | "done";
 
 interface KanbanBoardProps {
   initialTasks: Task[];
 }
 
 export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const columns: { id: TaskStatus; title: string }[] = [
     { id: "todo", title: "To Do" },
-    { id: "in-progress", title: "In Progress" },
+    { id: "in_progress", title: "In Progress" },
     { id: "review", title: "Review" },
     { id: "done", title: "Done" },
   ];
@@ -79,16 +80,65 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     setDraggedTask(null);
   };
 
-  const handleDropOnColumn = (status: TaskStatus) => {
+  const handleDropOnColumn = async (status: TaskStatus) => {
     if (draggedTask) {
-      setTasks((prev) =>
-        prev.map((task) =>
-          task.id === draggedTask.id ? { ...task, status } : task
-        )
-      );
-      setDraggedTask(null);
+      try {
+        // Update the task status in the backend
+        await axios.put(
+          `http://localhost:8000/api/v1/tasks/tasks/${draggedTask.id}/status`,
+          null,
+          {
+            params: { status: status.toUpperCase() },
+            headers: {
+              accept: "application/json",
+            },
+          }
+        );
+
+        // Update the task status locally
+        setTasks((prev) =>
+          prev.map((task) =>
+            task.id === draggedTask.id ? { ...task, status } : task
+          )
+        );
+        setDraggedTask(null);
+      } catch (error) {
+        console.error("Error updating task status:", error);
+      }
     }
   };
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      try {
+        const response = await axios.get("http://localhost:8000/api/v1/tasks/tasks?user_id=1", {
+          headers: {
+            accept: "application/json",
+          },
+        });
+
+        // Convert the fetched data to match the dummy data structure
+        const convertedTasks = response.data.map((task: any) => ({
+          id: task.task_id.toString(),
+          title: task.title,
+          description: task.description,
+          status: task.status.toLowerCase().replace("_", "-"), // Convert status to match dummy data format
+          position: task.position,
+          dueDate: task.due_date, // Convert due_date to dueDate
+          priority: task.priority.toLowerCase(), // Convert priority to lowercase
+          createdAt: task.created_at,
+          updatedAt: task.updated_at,
+          assignedIntern: task.assignedIntern
+        }));
+
+        setTasks(convertedTasks);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchTasks();
+  }, []);
 
   return (
     <div className="space-y-6">
