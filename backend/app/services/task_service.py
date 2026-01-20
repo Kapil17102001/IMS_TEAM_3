@@ -8,8 +8,10 @@ def create_task(db: Session, task_data: TaskCreate, user_id: int) -> Task:
     new_task = Task(
         title=task_data.title,
         description=task_data.description,
-        status=TaskStatus.TODO,
+        status=task_data.status,
         position=task_data.position,
+        due_date=task_data.due_date,
+        priority=task_data.priority,
         created_by=user_id
     )
     db.add(new_task)
@@ -33,6 +35,12 @@ def update_task(db: Session, task_id: str, task_data: TaskUpdate) -> Task:
 
     for key, value in task_data.dict(exclude_unset=True).items():
         setattr(task, key, value)
+
+    if task_data.due_date is not None:
+        task.due_date = task_data.due_date
+
+    if task_data.priority is not None:
+        task.priority = task_data.priority
 
     db.commit()
     db.refresh(task)
