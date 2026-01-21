@@ -10,7 +10,7 @@ class InternBase(BaseModel):
     department: Optional[str] = None
     start_date: Optional[date] = None
     end_date: Optional[date] = None
-    status: Optional[InternStatus] = InternStatus.ONBOARDING
+    status: Optional[InternStatus] = InternStatus.ACTIVE
     address: Optional[str]
     job_position: Optional[str]
     salary: Optional[str]

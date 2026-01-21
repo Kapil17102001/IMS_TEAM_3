@@ -6,7 +6,7 @@ import { TaskModal } from "./TaskModal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
-type TaskStatus = "todo" | "in_progress" | "review" | "done";
+type TaskStatus = "todo" | "in-progress" | "review" | "done";
 
 interface KanbanBoardProps {
   initialTasks: Task[];
@@ -20,7 +20,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
 
   const columns: { id: TaskStatus; title: string }[] = [
     { id: "todo", title: "To Do" },
-    { id: "in_progress", title: "In Progress" },
+    { id: "in-progress", title: "In Progress" },
     { id: "review", title: "Review" },
     { id: "done", title: "Done" },
   ];
@@ -138,7 +138,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     };
 
     fetchTasks();
-  }, []);
+  }, [isModalOpen]);
 
   return (
     <div className="space-y-6">
@@ -197,6 +197,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
         onClose={() => {
           setIsModalOpen(false);
           setEditingTask(null);
+
         }}
         onSave={handleSaveTask}
         onDelete={editingTask ? () => handleDeleteTask(editingTask.id) : undefined}

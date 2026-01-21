@@ -6,7 +6,7 @@ from datetime import date
 
 class TaskStatus(str, enum.Enum):
     TODO = "TODO"
-    IN_PROGRESS = "IN_PROGRESS"
+    IN_PROGRESS = "IN-PROGRESS"
     DONE = "DONE"
     REVIEW = "REVIEW"
 

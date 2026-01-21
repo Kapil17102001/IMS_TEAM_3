@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MainLayout } from "../components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,25 +12,66 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
-import { mockInterns } from "../mock-data";
-import { Intern } from "../types";
-
-type Status = "good" | "average" | "needs-improvement";
+import { useInterns } from "../context/InternsContext";
+import axios from "axios";
 
 export default function Performance() {
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const { interns, loading, error } = useInterns();
+  const [internTasks, setInternTasks] = useState<Record<number, any[]>>({});
+
+  useEffect(() => {
+    async function fetchTasks() {
+      const tasksByIntern: Record<number, any[]> = {};
+      for (const intern of interns) {
+        try {
+          const response = await axios.get(
+            `http://localhost:8000/api/v1/tasks/tasks/intern/${intern.id}`,
+            {
+              headers: {
+                accept: "application/json",
+              },
+            }
+          );
+          tasksByIntern[intern.id] = response.data;
+        } catch (error) {
+          console.error(`Error fetching tasks for intern ${intern.id}:`, error);
+          tasksByIntern[intern.id] = [];
+        }
+      }
+      setInternTasks(tasksByIntern);
+    }
+
+    if (interns.length > 0) {
+      fetchTasks();
+    }
+  }, [interns]);
+
+  const calculatePerformanceScore = (internId: number) => {
+    const tasks = internTasks[internId] || [];
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(
+      (task) => task.status.toLowerCase() === "done"
+    ).length;
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  };
+
+  const enhancedInterns = interns.map((intern) => ({
+    ...intern,
+    performanceScore: calculatePerformanceScore(intern.id),
+  }));
 
   const departments = [
     "all",
-    ...Array.from(new Set(mockInterns.map((i) => i.department))),
+    ...Array.from(new Set(interns.map((i) => i.department))),
   ];
 
   const filteredInterns = useMemo(() => {
-    return mockInterns.filter((intern) => {
+    return enhancedInterns.filter((intern) => {
       const matchesSearch =
-        intern.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        intern.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         intern.email.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesDept =
         departmentFilter === "all" || intern.department === departmentFilter;
@@ -38,35 +79,32 @@ export default function Performance() {
         statusFilter === "all" || intern.status === statusFilter;
       return matchesSearch && matchesDept && matchesStatus;
     });
-  }, [searchQuery, departmentFilter, statusFilter]);
+  }, [searchQuery, departmentFilter, statusFilter, enhancedInterns]);
 
-  const getStatusBadge = (status: Status) => {
-    switch (status) {
-      case "good":
-        return (
-          <Badge variant="default" className="bg-success/20 text-success border-0">
-            <TrendingUp className="w-3 h-3 mr-1" />
-            Good
-          </Badge>
-        );
-      case "average":
-        return (
-          <Badge variant="secondary" className="bg-warning/20 text-warning border-0">
-            Average
-          </Badge>
-        );
-      case "needs-improvement":
-        return (
-          <Badge
-            variant="destructive"
-            className="bg-destructive/20 text-destructive border-0"
-          >
-            <TrendingDown className="w-3 h-3 mr-1" />
-            Needs Improvement
-          </Badge>
-        );
-      default:
-        return null;
+  const getStatusBadge = (score: number) => {
+    if (score >= 80) {
+      return (
+        <Badge variant="default" className="bg-success/20 text-success border-0">
+          <TrendingUp className="w-3 h-3 mr-1" />
+          Good
+        </Badge>
+      );
+    } else if (score >= 70) {
+      return (
+        <Badge variant="secondary" className="bg-warning/20 text-warning border-0">
+          Average
+        </Badge>
+      );
+    } else {
+      return (
+        <Badge
+          variant="destructive"
+          className="bg-destructive/20 text-destructive border-0"
+        >
+          <TrendingDown className="w-3 h-3 mr-1" />
+          Needs Improvement
+        </Badge>
+      );
     }
   };
 
@@ -91,24 +129,24 @@ export default function Performance() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Total Interns</p>
-            <p className="text-3xl font-bold mt-2">{mockInterns.length}</p>
+            <p className="text-3xl font-bold mt-2">{interns.length}</p>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Good Performance</p>
             <p className="text-3xl font-bold mt-2 text-success">
-              {mockInterns.filter((i) => i.status === "good").length}
+              {interns.filter((i) => i.status === "good").length}
             </p>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Average</p>
             <p className="text-3xl font-bold mt-2 text-warning">
-              {mockInterns.filter((i) => i.status === "average").length}
+              {interns.filter((i) => i.status === "average").length}
             </p>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Needs Improvement</p>
             <p className="text-3xl font-bold mt-2 text-destructive">
-              {mockInterns.filter((i) => i.status === "needs-improvement").length}
+              {interns.filter((i) => i.status === "needs-improvement").length}
             </p>
           </Card>
         </div>
@@ -184,9 +222,9 @@ export default function Performance() {
                   <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                     Department
                   </th>
-                  <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                  {/* <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                     Mentor
-                  </th>
+                  </th> */}
                   <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
                     Score
                   </th>
@@ -205,25 +243,25 @@ export default function Performance() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                            {intern.name.charAt(0)}
+                            {intern.full_name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-medium text-foreground">{intern.name}</p>
+                            <p className="font-medium text-foreground">{intern.full_name}</p>
                             <p className="text-xs text-muted-foreground">{intern.email}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{intern.role}</td>
+                      <td className="px-6 py-4 text-sm text-foreground">{intern.job_position}</td>
                       <td className="px-6 py-4 text-sm text-foreground">
                         {intern.department}
                       </td>
-                      <td className="px-6 py-4 text-sm text-foreground">{intern.mentor}</td>
+                      {/* <td className="px-6 py-4 text-sm text-foreground">{intern.mentor}</td> */}
                       <td className="px-6 py-4 text-center">
                         <span className={`font-bold text-lg ${getScoreColor(intern.performanceScore)}`}>
                           {intern.performanceScore}
                         </span>
                       </td>
-                      <td className="px-6 py-4">{getStatusBadge(intern.status)}</td>
+                      <td className="px-6 py-4">{getStatusBadge(intern.performanceScore)}</td>
                     </tr>
                   ))
                 ) : (
@@ -237,7 +275,7 @@ export default function Performance() {
             </table>
           </div>
           <div className="px-6 py-4 border-t border-border bg-muted/50 text-sm text-muted-foreground">
-            Showing {filteredInterns.length} of {mockInterns.length} interns
+            Showing {filteredInterns.length} of {interns.length} interns
           </div>
         </Card>
       </div>

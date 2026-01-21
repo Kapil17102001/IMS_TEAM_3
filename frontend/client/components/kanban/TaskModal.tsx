@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Task } from "../../types";
-import { mockInterns } from "../../mock-data";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { AlertCircle, Trash2 } from "lucide-react";
 import axios from "axios";
+import { useToast } from "@/hooks/use-toast";
+import { useInterns } from "../../context/InternsContext";
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -46,6 +47,8 @@ export function TaskModal({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { toast } = useToast();
+  const { interns, loading, error } = useInterns();
 
   useEffect(() => {
     if (task) {
@@ -99,15 +102,35 @@ export function TaskModal({
         position: 0, // Assuming position is 0 for new tasks
         due_date: formData.dueDate,
         priority: formData.priority,
-        assigned_interns: formData.assignedIntern ? [parseInt(formData.assignedIntern)] : [],
+        assigned_intern: formData.assignedIntern ? parseInt(formData.assignedIntern) : null,
       });
 
       onSave(response.data);
       onClose();
+      // Show success toast
+      toast({
+        title: "Success",
+        description: "Task created successfully!",
+        variant: "success",
+      });
     } catch (error) {
       console.error("Error creating task:", error);
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to create task. Please try again.",
+        variant: "destructive",
+      });
     }
   };
+
+  if (loading) {
+    return <p>Loading interns...</p>;
+  }
+
+  if (error) {
+    return <p className="text-destructive">{error}</p>;
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -176,9 +199,9 @@ export function TaskModal({
                 <SelectValue placeholder="Select an intern" />
               </SelectTrigger>
               <SelectContent>
-                {mockInterns.map((intern) => (
-                  <SelectItem key={intern.id} value={intern.id}>
-                    {intern.name} - {intern.role}
+                {interns.map((intern) => (
+                  <SelectItem key={intern.id} value={intern.id.toString()}>
+                    {intern.full_name} - {intern.job_position}
                   </SelectItem>
                 ))}
               </SelectContent>
