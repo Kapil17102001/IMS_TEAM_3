@@ -56,7 +56,7 @@ export function KanbanCard({
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const isOverdue = task.due_date && new Date(task.due_date) < new Date();
+  const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
   return (
     <Card
@@ -86,11 +86,11 @@ export function KanbanCard({
           {task.priority.charAt(0).toUpperCase() + task.priority.slice(1).toLowerCase()}
         </Badge>
 
-        {task.due_date && (
+        {task.dueDate && (
           <div className={`flex items-center gap-1 text-xs ${isOverdue ? "text-destructive" : "text-muted-foreground"}`}>
             <Calendar className="w-3 h-3" />
             <span className={isOverdue ? "font-semibold" : ""}>
-              {formatDate(task.due_date)}
+              {formatDate(task.dueDate)}
             </span>
           </div>
         )}

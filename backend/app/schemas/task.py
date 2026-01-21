@@ -14,7 +14,7 @@ class TaskBase(BaseModel):
 class TaskCreate(TaskBase):
     due_date: date
     priority: TaskPriority
-    assigned_intern: Optional[int] = []
+    assigned_intern: Optional[int] 
 
 class TaskUpdate(TaskBase):
     title: Optional[str] = None
@@ -23,6 +23,7 @@ class TaskUpdate(TaskBase):
     position: Optional[int] = None
     due_date: Optional[date] = None
     priority: Optional[TaskPriority] = None
+    assigned_intern: Optional[int] = None
 
 class TaskInDBBase(TaskBase):
     task_id: int
@@ -34,7 +35,7 @@ class TaskInDBBase(TaskBase):
         orm_mode = True
 
 class Task(TaskInDBBase):
-    assignedIntern:Optional[str]
+    assignedIntern:Optional[str] = None
 
 class TaskInDB(TaskInDBBase):
     pass
