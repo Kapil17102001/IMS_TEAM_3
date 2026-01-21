@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Calendar, MoreVertical, Edit2, Trash2, Flag } from "lucide-react";
-import { mockInterns } from "../../mock-data";
+import { useInterns } from "../../context/InternsContext";
 
 interface KanbanCardProps {
   task: Task;
@@ -28,7 +28,8 @@ export function KanbanCard({
   onDragEnd,
   isDragging,
 }: KanbanCardProps) {
-  const intern = mockInterns.find((i) => i.id === task.assignedIntern);
+  const { interns } = useInterns(); // Use interns from InternsContext
+  const intern = interns.find((i) => i.id === Number(task.assignedIntern)); // Use real interns data
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toUpperCase()) {
@@ -100,14 +101,14 @@ export function KanbanCard({
       {intern && (
         <div className="flex items-center gap-2 mb-4 p-2 bg-muted/50 rounded">
           <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
-            {intern.name.charAt(0)}
+            {intern.full_name.charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-medium text-foreground truncate">
-              {intern.name}
+              {intern.full_name}
             </p>
             <p className="text-xs text-muted-foreground truncate">
-              {intern.role}
+              {intern.job_position}
             </p>
           </div>
         </div>

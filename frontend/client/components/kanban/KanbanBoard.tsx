@@ -5,6 +5,7 @@ import { KanbanColumn } from "./KanbanColumn";
 import { TaskModal } from "./TaskModal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { useUser } from "../../context/UserContext";
 
 type TaskStatus = "todo" | "in-progress" | "review" | "done";
 
@@ -13,6 +14,7 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
+  const { user } = useUser();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -111,11 +113,22 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/v1/tasks/tasks?user_id=1", {
-          headers: {
-            accept: "application/json",
-          },
-        });
+        let response;
+        
+        // Use different API endpoint based on user role
+        if (user?.role === "intern" && user?.id) {
+          response = await axios.get(`http://localhost:8000/api/v1/tasks/tasks/intern/${user.id}?id_type=user`, {
+            headers: {
+              accept: "application/json",
+            },
+          });
+        } else {
+          response = await axios.get("http://localhost:8000/api/v1/tasks/tasks", {
+            headers: {
+              accept: "application/json",
+            },
+          });
+        }
 
         // Convert the fetched data to match the dummy data structure
         const convertedTasks = response.data.map((task: any) => ({
@@ -137,8 +150,10 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       }
     };
 
-    fetchTasks();
-  }, [isModalOpen]);
+    if (user) {
+      fetchTasks();
+    }
+  }, [isModalOpen, user]);
 
   return (
     <div className="space-y-6">
@@ -150,10 +165,10 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
             Manage intern tasks and track progress
           </p>
         </div>
-        <Button onClick={handleAddTask} className="gap-2">
+       {user.role =="admin" && <Button onClick={handleAddTask} className="gap-2">
           <Plus className="w-4 h-4" />
           New Task
-        </Button>
+        </Button>}
       </div>
 
       {/* Task Statistics */}
