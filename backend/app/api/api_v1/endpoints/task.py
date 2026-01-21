@@ -48,10 +48,15 @@ def read_tasks(db: Session = Depends(get_db)):
     # Add assignedIntern field to each task as a string
     tasks_with_interns = []
     for task in tasks:
-        task_assignment = db.query(TaskAssignment).all()
-        assigned_intern = str(task_assignment.intern_id) if task_assignment else None
-        task_dict = task.__dict__.copy() 
-        task_dict["assignedIntern"] = assigned_intern  
+        # Fetch task assignments for the current task
+        task_assignments = db.query(TaskAssignment).filter(TaskAssignment.task_id == task.task_id).all()
+        assigned_intern = str(task_assignments[0].intern_id) if task_assignments else None  # Get the first intern_id or None
+
+        # Convert task to dictionary and add assignedInterns field
+        task_dict = task.__dict__.copy()
+        task_dict.pop("_sa_instance_state", None)  # Remove SQLAlchemy internal state
+        task_dict["assignedIntern"] = assigned_intern  # Add assignedInterns field
+
         tasks_with_interns.append(task_dict)
 
     return tasks_with_interns

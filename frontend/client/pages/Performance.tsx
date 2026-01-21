@@ -28,7 +28,7 @@ export default function Performance() {
       for (const intern of interns) {
         try {
           const response = await axios.get(
-            `http://localhost:8000/api/v1/tasks/tasks/intern/${intern.id}`,
+            `http://localhost:8000/api/v1/tasks/tasks/intern/${intern.id}?id_type=intern`,
             {
               headers: {
                 accept: "application/json",

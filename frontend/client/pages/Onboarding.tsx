@@ -18,12 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 const DEPARTMENTS = ["COE", "Engineering", "Design", "Analytics", "Quality Assurance", "Product"];
 const ROLES = [
   "Intern",
-  "Frontend Developer",
-  "Backend Developer",
-  "Full Stack Developer",
-  "Product Designer",
-  "Data Analyst",
-  "QA Engineer",
 ];
 
 interface FormData {
@@ -132,7 +126,7 @@ export default function Onboarding() {
         department: formData.department,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        status: "onboarding", // Hidden field, always set to onboarding
+        status: "active", // Hidden field, always set to onboarding
         address: formData.address,
         job_position: formData.job_position,
         salary: "25,000", // Hidden field, default value

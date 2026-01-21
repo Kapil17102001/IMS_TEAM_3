@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../../context/ThemeContext";
+import { useUser } from "../../context/UserContext";
 import {
   Menu,
   X,
@@ -31,13 +32,20 @@ export function MainLayout({ children }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
+  const { user, logout } = useUser();
 
-  const navItems = [
+  const allNavItems = [
     { label: "Onboarding", href: "/onboarding", icon: Users },
     { label: "Performance", href: "/performance", icon: BarChart3 },
     { label: "Intern Views", href: "/interns", icon: BookOpen },
     { label: "Planner", href: "/planner", icon: CheckSquare },
   ];
+
+  const internNavItems = [
+    { label: "Planner", href: "/planner", icon: CheckSquare },
+  ];
+
+  const navItems = user?.role === "admin" ? allNavItems : user?.role === "intern" ? internNavItems : [];
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -151,14 +159,14 @@ export function MainLayout({ children }: MainLayoutProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground font-semibold">
-                    JD
+                    {user?.username?.charAt(0).toUpperCase() || "U"}
                   </div>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="font-semibold text-sm">John Doe</p>
-                  <p className="text-xs text-muted-foreground">Admin</p>
+                  <p className="font-semibold text-sm">{user?.username || "Guest"}</p>
+                  <p className="text-xs text-muted-foreground">{user?.role || "User"}</p>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="cursor-pointer">
@@ -170,7 +178,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="cursor-pointer text-destructive">
+                <DropdownMenuItem
+                  className="cursor-pointer text-destructive"
+                  onClick={logout}
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   <span>Logout</span>
                 </DropdownMenuItem>
