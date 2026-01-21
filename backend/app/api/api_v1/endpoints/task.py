@@ -7,6 +7,7 @@ from app.api.deps import get_db
 from app.services.task_assignment_service import create_task_assignment, get_task_assignment
 from app.schemas.task_assignment import TaskAssignmentCreate
 from app.models.taskAssignment import TaskAssignment
+from app.models.user import User  # Import User model
 
 router = APIRouter()
 
@@ -40,17 +41,17 @@ def read_task(task_id: int, db: Session = Depends(get_db)):
     return task
 
 @router.get("/tasks", response_model=List[Task])
-def read_tasks(db: Session = Depends(get_db), user_id: int = 1):
+def read_tasks(db: Session = Depends(get_db)):
     """Get all tasks for the current user."""
-    tasks = get_tasks(db, user_id)
+    tasks = get_tasks(db)
 
     # Add assignedIntern field to each task as a string
     tasks_with_interns = []
     for task in tasks:
-        task_assignment = db.query(TaskAssignment).filter(TaskAssignment.task_id == task.task_id).first()
+        task_assignment = db.query(TaskAssignment).all()
         assigned_intern = str(task_assignment.intern_id) if task_assignment else None
-        task_dict = task.__dict__.copy()  # Create a copy of the task dictionary
-        task_dict["assignedIntern"] = assigned_intern  # Use the correct field name
+        task_dict = task.__dict__.copy() 
+        task_dict["assignedIntern"] = assigned_intern  
         tasks_with_interns.append(task_dict)
 
     return tasks_with_interns
@@ -82,9 +83,33 @@ def update_task_status(task_id: int, status: str, db: Session = Depends(get_db))
     db.commit()
     return "Success"
 
-@router.get("/tasks/intern/{intern_id}", response_model=List[Task])
-def get_tasks_by_intern(intern_id: int, db: Session = Depends(get_db)):
-    """Get all tasks assigned to a specific intern."""
+@router.get("/tasks/intern/{id}", response_model=List[Task])
+def get_tasks_by_intern(id: int, id_type: str = "intern", db: Session = Depends(get_db)):
+    """Get all tasks assigned to a specific intern.
+    
+    Args:
+        id: The ID value (either intern_id or user_id based on id_type)
+        id_type: Either 'intern' or 'user' to specify the type of ID provided
+        db: Database session
+    """
+    intern_id = None
+    
+    # Determine the intern_id based on id_type
+    if id_type == "user":
+        # If user_id is provided, fetch intern_id from user table
+        user = db.query(User).filter(User.id == id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not user.intern_id:
+            raise HTTPException(status_code=400, detail="User is not associated with an intern")
+        intern_id = user.intern_id
+    elif id_type == "intern":
+        # If intern_id is provided directly
+        intern_id = id
+    else:
+        raise HTTPException(status_code=400, detail="Invalid id_type. Must be 'intern' or 'user'")
+    
+    # Fetch tasks for the intern
     tasks = db.query(TaskAssignment).filter(TaskAssignment.intern_id == intern_id).all()
 
     if not tasks:

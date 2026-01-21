@@ -23,9 +23,9 @@ def get_task(db: Session, task_id: str) -> Task:
     """Retrieve a task by its ID."""
     return db.query(Task).filter(Task.task_id == task_id).first()
 
-def get_tasks(db: Session, user_id: int) -> List[Task]:
+def get_tasks(db: Session) -> List[Task]:
     """Retrieve all tasks created by a specific user."""
-    return db.query(Task).filter(Task.created_by == user_id).order_by(Task.position).all()
+    return db.query(Task).order_by(Task.position).all()
 
 def update_task(db: Session, task_id: str, task_data: TaskUpdate) -> Task:
     """Update an existing task."""
