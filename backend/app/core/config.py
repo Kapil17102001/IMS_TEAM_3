@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     GRAPH_TENANT_ID: str = ""       # "consumers" for personal accounts, or Tenant ID for orgs
     GRAPH_USER_SCOPES: list[str] = ["Mail.Send"]
 
+    # OPENAI CONFIGURATION
+    OPENAI_API_KEY: str = ""
+
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
