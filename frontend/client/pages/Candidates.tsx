@@ -7,48 +7,44 @@ import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-interface Intern {
+interface Candidate {
   id: number;
   full_name: string;
   email: string;
   university: string;
-  department: string;
-  start_date: string;
-  end_date: string;
-  status: string;
   address: string;
-  job_position: string;
-  salary: string;
-  gender: string;
+  status: string;
 }
 
-export default function Interns() {
+export default function Candidates() {
   const { toast } = useToast();
-  const [interns, setInterns] = useState<Intern[]>([]);
+  const navigate = useNavigate();
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
 
-  const fetchInterns = async () => {
+  const fetchCandidates = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("http://localhost:8000/api/v1/interns/?skip=0&limit=100", {
+      const response = await fetch("http://localhost:8000/api/v1/candidate/?skip=0&limit=100", {
         headers: {
           "Accept": "application/json",
         },
       });
 
       if (!response.ok) {
-        throw new Error("Failed to fetch interns");
+        throw new Error("Failed to fetch candidates");
       }
 
       const data = await response.json();
-      setInterns(data);
+      setCandidates(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch interns";
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch candidates";
       setError(errorMessage);
       toast({
         title: "Error",
@@ -61,7 +57,7 @@ export default function Interns() {
   };
 
   useEffect(() => {
-    fetchInterns();
+    fetchCandidates();
   }, []);
 
   const handleDelete = async (id: number, name: string) => {
@@ -70,7 +66,7 @@ export default function Interns() {
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/interns/${id}`, {
+      const response = await fetch(`http://localhost:8000/api/v1/candidate/${id}`, {
         method: "DELETE",
         headers: {
           "Accept": "application/json",
@@ -78,7 +74,7 @@ export default function Interns() {
       });
 
       if (!response.ok) {
-        throw new Error("Failed to delete intern");
+        throw new Error("Failed to delete candidate");
       }
 
       toast({
@@ -88,9 +84,9 @@ export default function Interns() {
       });
 
       // Refresh the list
-      fetchInterns();
+      fetchCandidates();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to delete intern";
+      const errorMessage = err instanceof Error ? err.message : "Failed to delete candidate";
       toast({
         title: "Error",
         description: errorMessage,
@@ -111,34 +107,32 @@ export default function Interns() {
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     switch (statusLower) {
-      case "active":
-        return <Badge className="bg-green-500 text-white">Active</Badge>;
-      case "onboarding":
-        return <Badge className="bg-blue-500 text-white">Onboarding</Badge>;
-      case "completed":
-        return <Badge className="bg-gray-500 text-white">Completed</Badge>;
-      case "terminated":
-        return <Badge className="bg-red-500 text-white">Terminated</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500 text-white">Pending</Badge>;
+      case "assessment":
+        return <Badge className="bg-blue-500 text-white">Assessment</Badge>;
+      case "interview1":
+        return <Badge className="bg-purple-500 text-white">Interview 1</Badge>;
+      case "interview2":
+        return <Badge className="bg-indigo-500 text-white">Interview 2</Badge>;
+      case "hr":
+        return <Badge className="bg-teal-500 text-white">HR</Badge>;
+      case "hired":
+        return <Badge className="bg-green-500 text-white">Hired</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500 text-white">Rejected</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
   };
 
-  const getGenderStats = () => {
-    const male = interns.filter(i => i.gender.toLowerCase() === "male").length;
-    const female = interns.filter(i => i.gender.toLowerCase() === "female").length;
-    return { male, female };
-  };
-
-  const stats = getGenderStats();
-
-  const filteredInterns = interns.filter((intern) => {
+  const filteredCandidates = candidates.filter((candidate) => {
     const matchesSearch =
-      intern.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      intern.email.toLowerCase().includes(searchTerm.toLowerCase());
+      candidate.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || intern.status.toLowerCase() === statusFilter;
+      statusFilter === "all" || candidate.status.toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -147,9 +141,9 @@ export default function Interns() {
     <MainLayout>
       <div className="space-y-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Intern Management</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Candidate Management</h1>
           <p className="text-muted-foreground">
-            View and manage all interns in the system
+            View and manage all candidates in the system
           </p>
         </div>
 
@@ -178,11 +172,11 @@ export default function Interns() {
               size="sm"
               onClick={() => setStatusFilter("all")}
             >
-              All Interns ({interns.length})
+              All Candidates ({candidates.length})
             </Button>
-            {["active", "onboarding", "completed", "terminated"].map((status) => {
-              const count = interns.filter(
-                (i) => i.status.toLowerCase() === status
+            {["pending", "assessment", "interview1", "interview2", "hr", "hired", "rejected"].map((status) => {
+              const count = candidates.filter(
+                (c) => c.status.toLowerCase() === status
               ).length;
               return (
                 <Button
@@ -201,16 +195,8 @@ export default function Interns() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card className="p-6">
-            <p className="text-sm font-medium text-muted-foreground">Total Interns</p>
-            <p className="text-3xl font-bold mt-2">{interns.length}</p>
-          </Card>
-          <Card className="p-6">
-            <p className="text-sm font-medium text-muted-foreground">Male</p>
-            <p className="text-3xl font-bold mt-2 text-blue-500">{stats.male}</p>
-          </Card>
-          <Card className="p-6">
-            <p className="text-sm font-medium text-muted-foreground">Female</p>
-            <p className="text-3xl font-bold mt-2 text-pink-500">{stats.female}</p>
+            <p className="text-sm font-medium text-muted-foreground">Total Candidates</p>
+            <p className="text-3xl font-bold mt-2">{candidates.length}</p>
           </Card>
         </div>
 
@@ -219,12 +205,12 @@ export default function Interns() {
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <span className="ml-3 text-muted-foreground">Loading interns...</span>
+              <span className="ml-3 text-muted-foreground">Loading candidates...</span>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-12">
               <p className="text-destructive font-medium mb-4">{error}</p>
-              <Button onClick={fetchInterns} variant="outline">
+              <Button onClick={fetchCandidates} variant="outline">
                 Retry
               </Button>
             </div>
@@ -244,10 +230,7 @@ export default function Interns() {
                         University
                       </th>
                       <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                        Department
-                      </th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
-                        Gender
+                        Address
                       </th>
                       <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
                         Status
@@ -258,36 +241,36 @@ export default function Interns() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
-                    {filteredInterns.length > 0 ? (
-                      filteredInterns.map((intern) => (
+                    {filteredCandidates.length > 0 ? (
+                      filteredCandidates.map((candidate) => (
                         <tr
-                          key={intern.id}
-                          className="hover:bg-muted/50 transition-colors duration-150"
+                          key={candidate.id}
+                          className="hover:bg-muted/50 transition-colors duration-150 cursor-pointer"
+                          onClick={() => navigate(`/candidate/${candidate.id}`)}
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                                {intern.full_name.charAt(0).toUpperCase()}
+                                {candidate.full_name.charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <p className="font-medium text-foreground">{intern.full_name}</p>
-                                <p className="text-xs text-muted-foreground">{intern.job_position}</p>
+                                <p className="font-medium text-foreground">{candidate.full_name}</p>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm text-foreground">{intern.email}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">{intern.university}</td>
-                          <td className="px-6 py-4 text-sm text-foreground">{intern.department}</td>
-                          <td className="px-6 py-4 text-center">
-                            <span className="capitalize text-sm text-foreground">{intern.gender}</span>
-                          </td>
-                          <td className="px-6 py-4 text-center">{getStatusBadge(intern.status)}</td>
+                          <td className="px-6 py-4 text-sm text-foreground">{candidate.email}</td>
+                          <td className="px-6 py-4 text-sm text-foreground">{candidate.university}</td>
+                          <td className="px-6 py-4 text-sm text-foreground">{candidate.address}</td>
+                          <td className="px-6 py-4 text-center">{getStatusBadge(candidate.status)}</td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleUpdate(intern.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdate(candidate.id);
+                                }}
                                 className="h-8 w-8 p-0"
                               >
                                 <Pencil className="h-4 w-4" />
@@ -295,7 +278,10 @@ export default function Interns() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleDelete(intern.id, intern.full_name)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(candidate.id, candidate.full_name);
+                                }}
                                 className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -306,8 +292,8 @@ export default function Interns() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
-                          No interns found
+                        <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                          No candidates found
                         </td>
                       </tr>
                     )}
@@ -315,7 +301,7 @@ export default function Interns() {
                 </table>
               </div>
               <div className="px-6 py-4 border-t border-border bg-muted/50 text-sm text-muted-foreground">
-                Showing {filteredInterns.length} intern{filteredInterns.length !== 1 ? "s" : ""}
+                Showing {filteredCandidates.length} candidate{filteredCandidates.length !== 1 ? "s" : ""}
               </div>
             </>
           )}

@@ -10,6 +10,8 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { InternsProvider } from "./context/InternsContext";
 import { UserProvider, useUser } from "./context/UserContext";
 import College from "./pages/College";
+import Candidates from "./pages/Candidates";
+import CandidateDetail from "./pages/CandidateDetail";
 
 // Pages
 import Index from "./pages/Index";
@@ -36,6 +38,8 @@ const AdminRoutes = () => (
     <Route path="/interns" element={<Interns />} />
     <Route path="/planner" element={<Planner />} />
     <Route path="/college" element={<College />} />
+    <Route path="/candidates" element={<Candidates />} />
+    <Route path="/candidate/:candidateId" element={<CandidateDetail />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
