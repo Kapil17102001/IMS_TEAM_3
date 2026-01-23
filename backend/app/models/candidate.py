@@ -18,3 +18,4 @@ class Candidate(Base):
     university = Column(String, index=True, nullable=True)
     status = Column(Enum(CandidateStatus), default=CandidateStatus.PENDING, nullable=True)
     address = Column(String, nullable=True)
+

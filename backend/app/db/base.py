@@ -5,3 +5,4 @@ from app.models.task import Task  # noqa
 from app.models.intern import Intern  # noqa
 from app.models.candidate import Candidate  # noqa
 from app.models.college import College
+from app.models.college_portal import CollegeStudent, UploadedFile, StudentResume  # noqa
