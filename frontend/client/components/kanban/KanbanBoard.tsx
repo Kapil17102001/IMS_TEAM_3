@@ -82,6 +82,14 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     setDraggedTask(null);
   };
 
+  
+  const isColumnDraggable = (columnId: TaskStatus) => {
+    if (user.role === "intern" && columnId === "done") {
+      return false;
+    }
+    return true;
+  };
+
   const handleDropOnColumn = async (status: TaskStatus) => {
     if (draggedTask) {
       try {
@@ -197,9 +205,9 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
             onAddTask={handleAddTask}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTask}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-            onDrop={() => handleDropOnColumn(column.id)}
+             onDragStart={isColumnDraggable(column.id) ? handleDragStart : undefined}
+            onDragEnd={isColumnDraggable(column.id) ? handleDragEnd : undefined}
+            onDrop={isColumnDraggable(column.id) ? () => handleDropOnColumn(column.id) : undefined}
             draggedTask={draggedTask}
           />
         ))}

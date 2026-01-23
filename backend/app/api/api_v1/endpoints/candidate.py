@@ -1,10 +1,12 @@
 from typing import List, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from collections import defaultdict
 
 from app.api import deps
 from app.schemas.candidate import Candidate, CandidateCreate, CandidateUpdate
 from app.services.candidate_service import candidate_service
+from app.services.text_extract import pdf_extraction_service
 
 router = APIRouter()
 
@@ -110,3 +112,16 @@ def delete_candidate(
     return candidate_service.delete_candidate(
         db=db, candidate_id=candidate_id
     )
+
+
+@router.post("/extract-resumes", response_model=dict[str, str])
+def extract_resumes(
+    db: Session = Depends(deps.get_db)
+) -> Any:
+    """
+    Extract text from resumes and process them to create candidates.
+    """
+    # Call the text extraction and processing function
+    results = pdf_extraction_service.extract_and_process_resumes()
+
+    return results

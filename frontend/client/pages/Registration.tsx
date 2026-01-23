@@ -113,6 +113,7 @@ export default function Registration() {
             >
               <option value="INTERN">Intern</option>
               <option value="COLLEGE">College</option>
+              <option value="PANEL">Panel</option>
             </select>
           </div>
 
