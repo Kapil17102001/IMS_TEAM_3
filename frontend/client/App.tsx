@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { InternsProvider } from "./context/InternsContext";
 import { UserProvider, useUser } from "./context/UserContext";
+import College from "./pages/College";
 
 // Pages
 import Index from "./pages/Index";
@@ -34,6 +35,7 @@ const AdminRoutes = () => (
     <Route path="/performance" element={<Performance />} />
     <Route path="/interns" element={<Interns />} />
     <Route path="/planner" element={<Planner />} />
+    <Route path="/college" element={<College />} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
