@@ -9,14 +9,13 @@ interface CandidateOverviewCardProps {
 }
 
 const statusBgColors: Record<string, string> = {
-  pending: "bg-status-pending/10 text-status-pending border-status-pending/20",
-  assessment:
-    "bg-status-assessment/10 text-status-assessment border-status-assessment/20",
-  interview:
-    "bg-status-interview/10 text-status-interview border-status-interview/20",
-  hr: "bg-status-hr/10 text-status-hr border-status-hr/20",
-  hired: "bg-status-hired/10 text-status-hired border-status-hired/20",
-  rejected: "bg-status-rejected/10 text-status-rejected border-status-rejected/20",
+  pending: "bg-yellow-500 text-white",
+  assessment: "bg-blue-500 text-white",
+  interview1: "bg-purple-500 text-white",
+  interview2: "bg-indigo-500 text-white",
+  hr: "bg-teal-500 text-white",
+  hired: "bg-green-500 text-white",
+  rejected: "bg-red-500 text-white",
 };
 
 export default function CandidateOverviewCard({

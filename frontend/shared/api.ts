@@ -22,7 +22,6 @@ export interface DemoResponse {
  * Candidate status enum - represents the hiring pipeline stages
  */
 export enum CandidateStatus {
-  PENDING = "pending",
   ASSESSMENT = "assessment",
   INTERVIEW1 = "interview1",
   INTERVIEW2 = "interview2",

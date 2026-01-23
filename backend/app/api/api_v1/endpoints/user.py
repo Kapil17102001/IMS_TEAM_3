@@ -3,6 +3,7 @@ from datetime import timedelta
 from app.services.user_service import create_access_token, decode_access_token, verify_password, get_password_hash
 from app.models.user import User
 from app.models.intern import Intern  # Import Intern model
+from app.models.college import College  # Import College model
 from app.db.session import SessionLocal
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -61,6 +62,14 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail="Email not found in intern records. Please contact admin.")
         intern_id = intern.id
 
+    # If role is college, get college_id from college table
+    college_id = None
+    if role == UserRole.COLLEGE:
+        college = db.query(College).filter(College.email == user.email).first()
+        if not college:
+            raise HTTPException(status_code=400, detail="Email not found in college records. Please contact admin.")
+        college_id = college.id
+
     # Hash the password
     hashed_password = get_password_hash(user.password)
 
@@ -70,7 +79,8 @@ def register_user(user: UserCreate, db: Session = Depends(get_db)):
         email=user.email,
         hashed_password=hashed_password,
         role=role,  # Assign validated role
-        intern_id=intern_id  # Assign intern_id if role is intern
+        intern_id=intern_id,  # Assign intern_id if role is intern
+        college_id=college_id  # Assign college_id if role is college
     )
     db.add(new_user)
     db.commit()

@@ -46,6 +46,26 @@ const statusBgColors: Record<string, string> = {
   rejected: "bg-status-rejected/10 text-status-rejected border-status-rejected/20",
 };
 
+// Helper function to convert CandidateStatus to integer
+export const getStatusAsInt = (status: CandidateStatus): number => {
+  switch (status) {
+    case CandidateStatus.ASSESSMENT:
+      return 1;
+    case CandidateStatus.INTERVIEW1:
+      return 2;
+    case CandidateStatus.INTERVIEW2:
+      return 3;
+    case CandidateStatus.HR:
+      return 4;
+    case CandidateStatus.HIRED:
+      return 5;
+    case CandidateStatus.REJECTED:
+      return 6;
+    default:
+      throw new Error(`Unknown status: ${status}`);
+  }
+};
+
 export default function StatusUpdateSection({
   candidate,
   setCandidate,
@@ -102,23 +122,32 @@ export default function StatusUpdateSection({
 
     setIsUpdating(true);
     try {
-      // Simulate API call - submit feedback and status update together
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      // Make API call to save feedback and update status
+      const response = await fetch(
+        "http://localhost:8000/api/v1/candidate_interviews/save-feedback",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            candidateId: candidate.id,
+            round: getStatusAsInt(selectedStatus), // Convert selectedStatus to integer
+            feedback: feedback,
+            rating: rating,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update status");
+      }
 
       const updatedCandidate = {
         ...candidate,
         status: selectedStatus,
       };
-
-      // In a real app, this would also save the feedback to the backend:
-      // {
-      //   candidateId: candidate.id,
-      //   round: selectedStatus,
-      //   feedback: feedback,
-      //   rating: rating,
-      //   interviewer: currentUser.name,
-      //   date: new Date().toISOString()
-      // }
 
       setCandidate(updatedCandidate);
       setSelectedStatus("");

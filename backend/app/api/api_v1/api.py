@@ -4,6 +4,8 @@ from app.api.api_v1.endpoints import task
 from app.api.api_v1.endpoints import task_assignment
 from app.api.api_v1.endpoints import candidate
 from app.api.api_v1.endpoints import college
+from app.api.api_v1.endpoints import interview_rounds
+from app.api.api_v1.endpoints import candidate_interviews
 from fastapi import APIRouter
 
 api_router = APIRouter()
@@ -13,3 +15,5 @@ api_router.include_router(task.router,prefix="/tasks",tags=["tasks"])
 api_router.include_router(candidate.router,prefix="/candidate",tags=["candidate"])
 api_router.include_router(task_assignment.router,prefix="/task_assignment",tags=["task_assignment"])
 api_router.include_router(college.router,prefix="/colleges",tags=["colleges"])
+api_router.include_router(interview_rounds.router,prefix="/interview_rounds",tags=["interview_rounds"])
+api_router.include_router(candidate_interviews.router,prefix="/candidate_interviews",tags=["candidate_interviews"])

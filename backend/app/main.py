@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.api.api_v1.api import api_router
 from app.db.base_class import Base
@@ -22,6 +23,13 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],  # Allow all methods (GET, POST, PUT, DELETE, etc.)
     allow_headers=["*"],  # Allow all headers
+)
+
+# Mount static files for resume PDFs
+app.mount(
+    "/resumes",
+    StaticFiles(directory="documents/resume"),
+    name="resumes"
 )
 
 @app.on_event("startup")

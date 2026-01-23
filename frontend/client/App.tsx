@@ -51,6 +51,14 @@ const InternRoutes = () => (
   </Routes>
 );
 
+const PanelRoutes = () => (
+  <Routes>
+    <Route path="/candidates" element={<Candidates />} />
+    <Route path="/candidate/:candidateId" element={<CandidateDetail />} />
+    <Route path="*" element={<Navigate to="/candidates" replace />} />
+  </Routes>
+);
+
 const AppContent = () => {
   const { user } = useUser();
 
@@ -76,6 +84,8 @@ const AppContent = () => {
               <AdminRoutes />
             ) : user.role === "intern" ? (
               <InternRoutes />
+            ) : user.role === "panel" ? (
+              <PanelRoutes />
             ) : (
               <Navigate to="/login" replace />
             )

@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar, MoreVertical, Edit2, Trash2, Flag } from "lucide-react";
 import { useInterns } from "../../context/InternsContext";
+import axios from "axios";
+import { useUser } from "../../context/UserContext";
 
 interface KanbanCardProps {
   task: Task;
@@ -29,6 +31,7 @@ export function KanbanCard({
   isDragging,
 }: KanbanCardProps) {
   const { interns } = useInterns(); // Use interns from InternsContext
+  const { user } = useUser(); // Use user context to get role
   const intern = interns.find((i) => i.id === Number(task.assignedIntern)); // Use real interns data
 
   const getPriorityColor = (priority: string) => {
@@ -58,6 +61,27 @@ export function KanbanCard({
   };
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
+
+  const handleApprove = async () => {
+    try {
+      // Update the task status in the backend
+      await axios.put(
+        `http://localhost:8000/api/v1/tasks/tasks/${task.id}/status`,
+        null,
+        {
+          params: { status: "DONE" },
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+
+      // Update the task status locally
+      task.status = "done";
+    } catch (error) {
+      console.error("Error approving task:", error);
+    }
+  };
 
   return (
     <Card
@@ -112,6 +136,16 @@ export function KanbanCard({
             </p>
           </div>
         </div>
+      )}
+
+      {/* Approve Button */}
+      {user.role === "admin" && task.status === "review" && (
+        <Button
+          onClick={handleApprove}
+          className="w-full bg-green-600 hover:bg-green-700 text-white mb-4"
+        >
+          Approve
+        </Button>
       )}
 
       {/* Actions */}
