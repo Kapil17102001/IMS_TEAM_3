@@ -42,11 +42,23 @@ export function MainLayout({ children }: MainLayoutProps) {
     { label: "Colleges", href: "/college", icon: BookOpen },
   ];
 
+  const collegeNavItems = [
+    { label: "Selected Students", href: "/selected-students", icon: Users },
+    { label: "Resumes Upload", href: "/resumes-upload", icon: BookOpen },
+  ];
+
   const internNavItems = [
     { label: "Planner", href: "/planner", icon: CheckSquare },
   ];
 
-  const navItems = user?.role === "admin" ? allNavItems : user?.role === "intern" ? internNavItems : [];
+  const navItems =
+    user?.role === "admin"
+      ? allNavItems
+      : user?.role === "intern"
+        ? internNavItems
+        : user?.role === "college"
+          ? collegeNavItems
+          : [];
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -54,11 +66,10 @@ export function MainLayout({ children }: MainLayoutProps) {
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
       <aside
-        className={`${
-          sidebarOpen ? "w-64" : "w-16"
-        } bg-card text-card-foreground border-r border-border transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}
-        // onMouseEnter={() => setSidebarOpen(true)}
-        // onMouseLeave={() => setSidebarOpen(false)}
+        className={`${sidebarOpen ? "w-64" : "w-16"
+          } bg-card text-card-foreground border-r border-border transition-all duration-300 ease-in-out flex flex-col overflow-hidden`}
+      // onMouseEnter={() => setSidebarOpen(true)}
+      // onMouseLeave={() => setSidebarOpen(false)}
       >
         {/* Logo */}
         <div className="p-4 border-b border-border flex items-center justify-center h-16">
@@ -71,9 +82,8 @@ export function MainLayout({ children }: MainLayoutProps) {
                 IMS
               </span>
             </div>
-            <span className={`font-bold text-lg whitespace-nowrap transition-all duration-300 ease-in-out ${
-              sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
-            }`}>
+            <span className={`font-bold text-lg whitespace-nowrap transition-all duration-300 ease-in-out ${sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
+              }`}>
               IMS
             </span>
           </Link>
@@ -88,17 +98,15 @@ export function MainLayout({ children }: MainLayoutProps) {
               <Link
                 key={item.href}
                 to={item.href}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-300 ease-in-out ${
-                  active
+                className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-300 ease-in-out ${active
                     ? "bg-primary text-primary-foreground"
                     : "hover:bg-accent hover:text-accent-foreground text-card-foreground"
-                }`}
+                  }`}
                 title={!sidebarOpen ? item.label : undefined}
               >
                 <Icon className="w-5 h-5 flex-shrink-0" />
-                <span className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${
-                  sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
-                }`}>
+                <span className={`text-sm font-medium whitespace-nowrap transition-all duration-300 ease-in-out ${sidebarOpen ? "opacity-100 w-auto" : "opacity-0 w-0"
+                  }`}>
                   {item.label}
                 </span>
               </Link>
@@ -113,9 +121,9 @@ export function MainLayout({ children }: MainLayoutProps) {
         <header className="bg-background border-b border-border px-6 py-3 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <h1 className="text-xl font-bold text-foreground">
-              Intern Management System
+              {user?.role === "college" ? "College Portal" : "Intern Management System"}
             </h1>
-            
+
             {/* Top Navigation Items */}
             <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
@@ -125,11 +133,10 @@ export function MainLayout({ children }: MainLayoutProps) {
                   <Link
                     key={item.href}
                     to={item.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                      active
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${active
                         ? "bg-primary text-primary-foreground"
                         : "hover:bg-muted text-foreground"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span className="text-sm font-medium">{item.label}</span>
