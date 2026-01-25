@@ -13,7 +13,7 @@ class InterviewRoundsService:
     def get_interview_round_by_id(
         self, db: Session, interview_round_id: int
     ) -> Optional[InterviewRounds]:
-        return db.query(InterviewRounds).filter(InterviewRounds.id == interview_round_id).first()
+        return db.query(InterviewRounds).filter(InterviewRounds.round_number == interview_round_id).first()
 
     def create_interview_round(
         self, db: Session, interview_round_in: InterviewRoundsCreate

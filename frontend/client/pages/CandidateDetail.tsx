@@ -49,7 +49,7 @@ export default function CandidateDetail() {
         const transformedCandidate: Candidate = {
           ...data,
           skills: parseSkills(data.skills),
-          resume_url: data.resume_name ? `http://localhost:8000/resumes/${data.resume_name}.pdf` : undefined,
+          resume_url: data.resume_name ? `http://localhost:8000/resumes/${data.resume_name}` : undefined,
         };
 
         setCandidate(transformedCandidate);

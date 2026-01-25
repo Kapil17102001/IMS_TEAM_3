@@ -29,6 +29,11 @@ class CandidateService:
             university=candidate_in.university,
             status=candidate_in.status,
             address=candidate_in.address,
+            resume_name = candidate_in.resume_name,
+            application_date = candidate_in.application_date,
+            source = candidate_in.source,
+            skills = candidate_in.skills,
+            college_id = candidate_in.college_id
         )
         db.add(db_candidate)
         db.commit()
@@ -58,6 +63,11 @@ class CandidateService:
             db.delete(db_candidate)
             db.commit()
         return db_candidate
+
+    def get_candidates_by_status(
+        self, db: Session, status: str, skip: int = 0, limit: int = 100
+    ) -> List[Candidate]:
+        return db.query(Candidate).filter(Candidate.status == status).offset(skip).limit(limit).all()
 
 
 candidate_service = CandidateService()

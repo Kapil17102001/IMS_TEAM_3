@@ -12,8 +12,8 @@ class CandidateInterviewsService:
 
     def get_candidate_interview_by_id(
         self, db: Session, candidate_interview_id: int
-    ) -> Optional[CandidateInterviews]:
-        return db.query(CandidateInterviews).filter(CandidateInterviews.id == candidate_interview_id).first()
+    ) -> Optional[List[CandidateInterviews]]:
+        return db.query(CandidateInterviews).filter(CandidateInterviews.candidate_id == candidate_interview_id).all()
 
     def create_candidate_interview(
         self, db: Session, candidate_interview_in: CandidateInterviewsCreate

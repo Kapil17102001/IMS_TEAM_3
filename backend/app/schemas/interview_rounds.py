@@ -27,6 +27,6 @@ class InterviewRounds(InterviewRoundsBase):
             "example": {
                 "id": 1,
                 "round_number": 1,
-                "round_name": "pending",
+                "round_name": "assessment",
             }
         }

@@ -40,14 +40,26 @@ export function MainLayout({ children }: MainLayoutProps) {
     { label: "Intern Views", href: "/interns", icon: BookOpen },
     { label: "Planner", href: "/planner", icon: CheckSquare },
     { label: "Colleges", href: "/college", icon: Users },
-     { label: "Candidates", href: "/candidates", icon: BookOpen },
+    { label: "Candidates", href: "/candidates", icon: BookOpen },
+  ];
+
+  const collegeNavItems = [
+    { label: "Selected Students", href: "/selected-students", icon: Users },
+    { label: "Resumes Upload", href: "/resumes-upload", icon: BookOpen },
   ];
 
   const internNavItems = [
     { label: "Planner", href: "/planner", icon: CheckSquare },
   ];
 
-  const navItems = user?.role === "admin" ? allNavItems : user?.role === "intern" ? internNavItems : [];
+  const navItems =
+    user?.role === "admin"
+      ? allNavItems
+      : user?.role === "intern"
+        ? internNavItems
+        : user?.role === "college"
+          ? collegeNavItems
+          : [];
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -114,7 +126,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <header className="bg-background border-b border-border px-6 py-3 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
             <h1 className="text-xl font-bold text-foreground">
-              Intern Management System
+                      {user?.role === "college" ? "College Portal" : "Intern Management System"}
             </h1>
             
             {/* Top Navigation Items */}

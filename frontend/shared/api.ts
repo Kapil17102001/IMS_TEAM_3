@@ -88,7 +88,6 @@ export const StatusColorMap: Record<CandidateStatus, string> = {
  */
 export function getStatusLabel(status: CandidateStatus): string {
   const labels: Record<CandidateStatus, string> = {
-    [CandidateStatus.PENDING]: "Pending",
     [CandidateStatus.ASSESSMENT]: "Assessment",
     [CandidateStatus.INTERVIEW1]: "Interview Round 1",
     [CandidateStatus.INTERVIEW2]: "Interview Round 2",
@@ -106,10 +105,7 @@ export function getAllowedNextStatuses(
   currentStatus: CandidateStatus
 ): CandidateStatus[] {
   const transitions: Record<CandidateStatus, CandidateStatus[]> = {
-    [CandidateStatus.PENDING]: [
-      CandidateStatus.ASSESSMENT,
-      CandidateStatus.REJECTED,
-    ],
+   
     [CandidateStatus.ASSESSMENT]: [
       CandidateStatus.INTERVIEW1,
       CandidateStatus.REJECTED,

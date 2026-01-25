@@ -38,7 +38,7 @@ def create_candidate_interview(
     )
 
 
-@router.get("/{candidate_interview_id}", response_model=CandidateInterviews)
+@router.get("/{candidate_interview_id}", response_model=List[CandidateInterviews])
 def read_candidate_interview_by_id(
     candidate_interview_id: int,
     db: Session = Depends(deps.get_db)
@@ -115,6 +115,7 @@ def save_feedback(
     """
     Save feedback for a candidate.
     """
+    print(f"The payload is : {feedback_data}")
     candidate_id = feedback_data.get("candidateId")
     round_id = feedback_data.get("round")
     feedback = feedback_data.get("feedback")
@@ -159,13 +160,12 @@ def save_feedback(
 
     # Fetch the round name from the InterviewRounds table
     interview_round = interview_rounds_service.get_interview_round_by_id(db, round_id)
-
     if not interview_round:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Round ID not found in InterviewRounds table."
         )
-    print(f"The value from db is : {interview_round}")
+    print(f"The value from db is : {interview_round.round_name}")
     round_name = interview_round.round_name
 
     candidate.status = round_name

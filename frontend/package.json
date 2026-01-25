@@ -30,6 +30,7 @@
     "pdf-viewer-reactjs": "^2.2.3",
     "pdfjs-dist": "^3.9.179",
     "pnpm": "^10.28.0",
+    "react-dropzone": "^14.3.8",
     "zod": "^3.25.76"
   },
   "devDependencies": {

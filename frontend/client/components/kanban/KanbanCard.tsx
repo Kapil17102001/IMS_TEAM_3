@@ -12,6 +12,7 @@ import { Calendar, MoreVertical, Edit2, Trash2, Flag } from "lucide-react";
 import { useInterns } from "../../context/InternsContext";
 import axios from "axios";
 import { useUser } from "../../context/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface KanbanCardProps {
   task: Task;
@@ -33,6 +34,7 @@ export function KanbanCard({
   const { interns } = useInterns(); // Use interns from InternsContext
   const { user } = useUser(); // Use user context to get role
   const intern = interns.find((i) => i.id === Number(task.assignedIntern)); // Use real interns data
+  const { toast } = useToast();
 
   const getPriorityColor = (priority: string) => {
     switch (priority.toUpperCase()) {
@@ -76,10 +78,27 @@ export function KanbanCard({
         }
       );
 
+      // Show success toast
+      toast({
+        title: "Task Approved",
+        description: `Task ${task.title} has been approved successfully!`,
+        variant: "success",
+      });
+
       // Update the task status locally
       task.status = "done";
+
+      // Trigger re-render of the parent page
+      onDragEnd();
     } catch (error) {
       console.error("Error approving task:", error);
+
+      // Show error toast
+      toast({
+        title: "Error",
+        description: "Failed to approve the task. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

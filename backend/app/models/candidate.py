@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum, Date, ARRAY
+from sqlalchemy import Column, Integer, String, Enum, Date, ARRAY,ForeignKey
 import enum
 from app.db.base_class import Base
 from app.models.enums import RoundName
@@ -16,3 +16,4 @@ class Candidate(Base):
     application_date = Column(Date, nullable=True)
     source = Column(String, nullable=True)
     skills = Column(String, nullable=True)
+    college_id = Column(Integer, ForeignKey("college.id"), nullable=False)

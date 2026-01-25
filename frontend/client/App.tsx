@@ -22,6 +22,8 @@ import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
 import Registration from "./pages/Registration";
 import Login from "./pages/Login";
+import ResumeUpload from "./pages/ResumeUpload";
+import CollegePortal from "./pages/CollegePortal";
 
 const queryClient = new QueryClient();
 
@@ -38,9 +40,15 @@ const AdminRoutes = () => (
     <Route path="/interns" element={<Interns />} />
     <Route path="/planner" element={<Planner />} />
     <Route path="/college" element={<College />} />
-    <Route path="/candidates" element={<Candidates />} />
-    <Route path="/candidate/:candidateId" element={<CandidateDetail />} />
     <Route path="*" element={<NotFound />} />
+  </Routes>
+);
+
+const CollegeRoutes = () => (
+  <Routes>
+    <Route path="/selected-students" element={<CollegePortal />} />
+    <Route path="/resumes-upload" element={<ResumeUpload />} />
+    <Route path="*" element={<Navigate to="/selected-students" replace />} />
   </Routes>
 );
 
@@ -86,7 +94,10 @@ const AppContent = () => {
               <InternRoutes />
             ) : user.role === "panel" ? (
               <PanelRoutes />
-            ) : (
+                ) : user.role === "college" ? (
+                    <CollegeRoutes/>
+            ):
+             (
               <Navigate to="/login" replace />
             )
           }
