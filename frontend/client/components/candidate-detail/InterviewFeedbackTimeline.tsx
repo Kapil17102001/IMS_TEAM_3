@@ -2,6 +2,29 @@ import { Card } from "@/components/ui/card";
 import { CandidateStatus, getStatusLabel } from "@shared/api";
 import { Star, User, Calendar } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useEffect, useState } from "react";
+import { getStatusAsInt } from "@shared/api";
+import { format } from "date-fns";
+
+// Function to map round_id to CandidateStatus
+const getRoundNameFromId = (roundId: number): CandidateStatus => {
+  switch (roundId) {
+    case 1:
+      return CandidateStatus.ASSESSMENT;
+    case 2:
+      return CandidateStatus.INTERVIEW1;
+    case 3:
+      return CandidateStatus.INTERVIEW2;
+    case 4:
+      return CandidateStatus.HR;
+    case 5:
+      return CandidateStatus.HIRED;
+    case 6:
+      return CandidateStatus.REJECTED;
+    default:
+      throw new Error(`Unknown round ID: ${roundId}`);
+  }
+};
 
 interface FeedbackEntry {
   id: string;
@@ -73,7 +96,43 @@ export default function InterviewFeedbackTimeline({
   candidateId,
 }: InterviewFeedbackTimelineProps) {
   const { theme } = useTheme();
-  const feedbackList = mockFeedback[candidateId] || [];
+  const [feedbackList, setFeedbackList] = useState<FeedbackEntry[]>([]);
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/v1/candidate_interviews/${candidateId}`,
+          {
+            headers: {
+              accept: "application/json",
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch feedback");
+        }
+
+        const data = await response.json();
+
+        const formattedFeedback = data.map((entry: any) => ({
+          id: entry.id,
+          round: getRoundNameFromId(entry.round_id),
+          interviewer: "Panel",
+          date: format(new Date(), "yyyy-MM-dd"), // Today's date
+          feedback: entry.feedback,
+          rating: entry.score,
+        }));
+
+        setFeedbackList(formattedFeedback);
+      } catch (error) {
+        console.error("Error fetching feedback:", error);
+      }
+    };
+
+    fetchFeedback();
+  }, [candidateId]);
 
   const renderStars = (rating: number) => {
     return (
@@ -114,7 +173,7 @@ export default function InterviewFeedbackTimeline({
         </div>
       ) : (
         <div className="space-y-6">
-          {feedbackList.map((entry, index) => (
+          {feedbackList.slice().reverse().map((entry, index) => (
             <div key={entry.id} className="relative">
               {/* Timeline Line */}
               {index !== feedbackList.length - 1 && (

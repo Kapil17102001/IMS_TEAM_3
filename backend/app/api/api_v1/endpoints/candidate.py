@@ -125,3 +125,24 @@ def extract_resumes(
     results = pdf_extraction_service.extract_and_process_resumes()
 
     return results
+
+
+@router.get("/status/{status}", response_model=List[Candidate])
+def read_candidates_by_status(
+    status: str,
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve all candidates with a specific status.
+    """
+    candidates = candidate_service.get_candidates_by_status(
+        db, status=status, skip=skip, limit=limit
+    )
+    if not candidates:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No candidates found with status '{status}'"
+        )
+    return candidates

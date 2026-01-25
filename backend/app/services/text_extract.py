@@ -7,6 +7,7 @@ from openai import OpenAI
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.candidate_service import CandidateService
+from app.services.college_service import CollegeService
 from app.schemas.candidate import CandidateCreate
 from app.models.enums import RoundName
 from datetime import date
@@ -23,8 +24,9 @@ class PDFExtractionService:
         # Initialize OpenAI client with API key from config
         self.llm_client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self.candidate_service = CandidateService()
+        self.college_service = CollegeService()  # Initialize CollegeService
 
-    def extract_and_process_resumes(self) -> Dict[str, str]:
+    def extract_and_process_resumes(self,college_id:int) -> Dict[str, str]:
         """
         Extract text from all PDF files in backend/documents/resume,
         process each using LLM to extract candidate information,
@@ -90,11 +92,13 @@ class PDFExtractionService:
                     candidate_data["resume_name"] = filename
 
                     # Add new fields to candidate data
-                    candidate_data["application_date"] = str(date.today())
+                    candidate_data["application_date"] = date.today()  # Use SQLAlchemy Date type
                     candidate_data["source"] = "college"
-
-                    # Extract skills from LLM response
+                    candidate_data["college_id"] = college_id
+                    college = self.college_service.get_college_by_id(db, college_id)
+                    candidate_data["university"] = college.college_name if college else "Unknown"
                     candidate_data["skills"] = candidate_data.get("skills", "")
+                    candidate_data["status"] = RoundName.ASSESSMENT
 
                     # Create candidate schema object
                     candidate_create = CandidateCreate(**candidate_data)
@@ -154,9 +158,8 @@ Extract candidate information from the following resume text and return it in JS
 Required fields:
 - full_name (string): The candidate's full name
 - email (string): The candidate's email address
-- university (string, optional): The university/educational institution
 - address (string, optional): The candidate's location/address
-- status (string): Set to "pending" by default
+- status (string): Set to "assessment" by default
 - skills (string): Comma-separated string of skills mentioned in the resume
 
 Resume text:
@@ -167,9 +170,8 @@ Example format:
 {{
     "full_name": "John Doe",
     "email": "john.doe@example.com",
-    "university": "Example University",
     "address": "City, Country",
-    "status": "pending",
+    "status": "assessment",
     "skills": "Python, Java, Docker, etc"
 }}
 """
@@ -201,8 +203,8 @@ Example format:
             if not candidate_data.get("email"):
                 raise ValueError("LLM failed to extract email")
 
-            # Ensure status is set to pending
-            candidate_data["status"] = RoundName.PENDING
+            # Ensure status is set to assessment
+            candidate_data["status"] = RoundName.ASSESSMENT
 
             # Ensure skills is a string
             if "skills" in candidate_data and isinstance(candidate_data["skills"], list):

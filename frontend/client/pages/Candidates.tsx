@@ -107,8 +107,6 @@ export default function Candidates() {
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     switch (statusLower) {
-      case "pending":
-        return <Badge className="bg-yellow-500 text-white">Pending</Badge>;
       case "assessment":
         return <Badge className="bg-blue-500 text-white">Assessment</Badge>;
       case "interview1":
@@ -174,7 +172,7 @@ export default function Candidates() {
             >
               All Candidates ({candidates.length})
             </Button>
-            {["pending", "assessment", "interview1", "interview2", "hr", "hired", "rejected"].map((status) => {
+            {[ "assessment", "interview1", "interview2", "hr", "hired", "rejected"].map((status) => {
               const count = candidates.filter(
                 (c) => c.status.toLowerCase() === status
               ).length;

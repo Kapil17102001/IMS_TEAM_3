@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainLayout } from "../components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,6 +19,20 @@ const DEPARTMENTS = ["COE", "Engineering", "Design", "Analytics", "Quality Assur
 const ROLES = [
   "Intern",
 ];
+
+interface Candidate {
+  id: number;
+  full_name: string;
+  email: string;
+  university: string;
+  status: string;
+  address: string;
+  resume_name: string;
+  application_date: string;
+  source: string;
+  skills: string;
+  college_id: number | null;
+}
 
 interface FormData {
   full_name: string;
@@ -53,6 +67,64 @@ export default function Onboarding() {
 
   const [submitState, setSubmitState] = useState<SubmitState>({ type: "idle", message: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string>("none");
+
+  // Fetch hired candidates on component mount
+  useEffect(() => {
+    const fetchHiredCandidates = async () => {
+      setCandidatesLoading(true);
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/candidate/status/HIRED?skip=0&limit=100", {
+          headers: {
+            "Accept": "application/json",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch candidates");
+        }
+
+        const data: Candidate[] = await response.json();
+        // Filter only hired candidates
+        const hiredCandidates = data.filter(candidate => candidate.status === "hired");
+        setCandidates(hiredCandidates);
+      } catch (error) {
+        console.error("Error fetching candidates:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch hired candidates",
+          variant: "destructive",
+        });
+      } finally {
+        setCandidatesLoading(false);
+      }
+    };
+
+    fetchHiredCandidates();
+  }, [toast]);
+
+  const handleCandidateSelect = (candidateId: string) => {
+    setSelectedCandidateId(candidateId);
+    
+    if (candidateId === "none") {
+      // Reset form if "None" is selected
+      return;
+    }
+
+    const candidate = candidates.find(c => c.id.toString() === candidateId);
+    if (candidate) {
+      setFormData(prev => ({
+        ...prev,
+        full_name: candidate.full_name,
+        email: candidate.email,
+        university: candidate.university,
+        address: candidate.address,
+        job_position: "Intern",
+      }));
+    }
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -174,6 +246,7 @@ export default function Onboarding() {
           job_position: "",
           gender: "",
         });
+        setSelectedCandidateId("none");
         setSubmitState({ type: "idle", message: "" });
       }, 3000);
 
@@ -205,6 +278,41 @@ export default function Onboarding() {
 
         <Card className="p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Candidate Selector */}
+            <div className="pb-6 border-b">
+              <Label htmlFor="candidate_selector" className="text-sm font-medium">
+                Select Hired Candidate (Optional)
+              </Label>
+              <p className="text-xs text-muted-foreground mt-1 mb-2">
+                Choose a hired candidate to autofill the form
+              </p>
+              <Select 
+                value={selectedCandidateId} 
+                onValueChange={handleCandidateSelect}
+                disabled={candidatesLoading}
+              >
+                <SelectTrigger id="candidate_selector" className="mt-2">
+                  <SelectValue placeholder={
+                    candidatesLoading 
+                      ? "Loading candidates..." 
+                      : candidates.length === 0 
+                        ? "No hired candidates available" 
+                        : "Select a candidate"
+                  } />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">
+                    -- None (Manual Entry) --
+                  </SelectItem>
+                  {candidates.map((candidate) => (
+                    <SelectItem key={candidate.id} value={candidate.id.toString()}>
+                      {candidate.full_name} ({candidate.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* Status Messages */}
             {submitState.type === "success" && (
               <div className="flex items-start gap-3 p-4 rounded-lg bg-success/10 border border-success/20">
