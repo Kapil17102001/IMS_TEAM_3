@@ -48,7 +48,8 @@ export default function Candidates() {
       }
 
       const data = await response.json();
-      setCandidates(data);
+      // Ensure data is always an array
+      setCandidates(Array.isArray(data) ? data : []);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch candidates";
       setError(errorMessage);
@@ -228,6 +229,11 @@ export default function Candidates() {
               <Button onClick={fetchCandidates} variant="outline">
                 Retry
               </Button>
+            </div>
+          ) : candidates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <p className="text-muted-foreground text-lg font-medium mb-2">No candidates to show</p>
+              <p className="text-muted-foreground text-sm">There are no hired candidates from your college yet.</p>
             </div>
           ) : (
             <>

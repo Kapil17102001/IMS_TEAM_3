@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { UserContext } from "../context/UserContext";
+import { Link } from "react-router-dom";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -80,7 +81,6 @@ export default function Login() {
             <Input
               id="email"
               name="email"
-              
               value={formData.email}
               onChange={handleChange}
               required
@@ -105,6 +105,15 @@ export default function Login() {
             {loading ? "Logging in..." : "Login"}
           </Button>
         </form>
+
+        <div className="text-center mt-4">
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link to="/registration" className="text-primary">
+              Sign Up here
+            </Link>
+          </p>
+        </div>
       </Card>
     </div>
   );

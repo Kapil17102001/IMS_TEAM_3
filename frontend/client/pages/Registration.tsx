@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export default function Registration() {
   const [formData, setFormData] = useState({
@@ -121,6 +122,15 @@ export default function Registration() {
             {loading ? "Registering..." : "Sign Up"}
           </Button>
         </form>
+
+        <div className="text-center mt-4">
+          <p className="text-sm text-muted-foreground">
+            Already have an account?{" "}
+            <Link to="/login" className="text-primary">
+              Sign In here
+            </Link>
+          </p>
+        </div>
       </Card>
     </div>
   );

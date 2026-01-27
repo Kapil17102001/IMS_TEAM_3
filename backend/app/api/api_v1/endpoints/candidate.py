@@ -174,7 +174,7 @@ def read_hired_candidates_by_user(
 
     if not filtered_candidates:
         raise HTTPException(
-            status_code=404,
+            status_code=200,
             detail=f"No hired candidates found for college_id '{college_id}'"
         )
 

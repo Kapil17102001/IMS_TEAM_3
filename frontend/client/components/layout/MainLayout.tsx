@@ -40,7 +40,6 @@ export function MainLayout({ children }: MainLayoutProps) {
     { label: "Intern Views", href: "/interns", icon: BookOpen },
     { label: "Planner", href: "/planner", icon: CheckSquare },
     { label: "Colleges", href: "/college", icon: Users },
-    { label: "Candidates", href: "/candidates", icon: BookOpen },
   ];
 
   const collegeNavItems = [
