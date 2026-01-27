@@ -17,19 +17,17 @@ class CollegeStudent(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    files = relationship("UploadedFile", back_populates="student", cascade="all, delete-orphan")
+ 
 
 class UploadedFile(Base):
     __tablename__ = "uploaded_files"
 
     id = Column(Integer, primary_key=True, index=True)
-    student_id = Column(Integer, ForeignKey("college_students.id", ondelete="CASCADE"), nullable=False)
+    candidate_id = Column(Integer, ForeignKey("candidate.id"), nullable=False)
     file_name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     file_size = Column(Integer, nullable=False)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
-
-    student = relationship("CollegeStudent", back_populates="files")
 
 class StudentResume(Base):
     __tablename__ = "student_resumes"

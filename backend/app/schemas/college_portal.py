@@ -34,7 +34,7 @@ class CollegeStudent(CollegeStudentBase):
 
 # --- Uploaded File Schemas ---
 class UploadedFileBase(BaseModel):
-    student_id: int
+    candidate_id: int
     file_name: str
     file_path: str
     file_size: int

@@ -7,6 +7,7 @@ from app.api import deps
 from app.schemas.candidate import Candidate, CandidateCreate, CandidateUpdate
 from app.services.candidate_service import candidate_service
 from app.services.text_extract import pdf_extraction_service
+from app.services.user_service import get_college_id_by_user_id
 
 router = APIRouter()
 
@@ -146,3 +147,35 @@ def read_candidates_by_status(
             detail=f"No candidates found with status '{status}'"
         )
     return candidates
+
+
+@router.get("/hired/{user_id}", response_model=List[Candidate])
+def read_hired_candidates_by_user(
+    user_id: int,
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100
+) -> Any:
+    """
+    Retrieve all hired candidates filtered by user_id.
+    """
+    # Fetch the college_id using the user_id
+    college_id = get_college_id_by_user_id(db, user_id=user_id)
+
+    # Fetch all candidates with "hired" status
+    candidates = candidate_service.get_candidates_by_status(
+        db, status="HIRED", skip=skip, limit=limit
+    )
+
+    # Filter candidates by college_id
+    filtered_candidates = [
+        candidate for candidate in candidates if candidate.college_id == college_id
+    ]
+
+    if not filtered_candidates:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No hired candidates found for college_id '{college_id}'"
+        )
+
+    return filtered_candidates

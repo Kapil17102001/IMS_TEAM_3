@@ -40,7 +40,7 @@ const AdminRoutes = () => (
     <Route path="/interns" element={<Interns />} />
     <Route path="/planner" element={<Planner />} />
     <Route path="/college" element={<College />} />
-    <Route path="*" element={<NotFound />} />
+    <Route path="*" element={<Navigate to="/" replace />}  />
   </Routes>
 );
 

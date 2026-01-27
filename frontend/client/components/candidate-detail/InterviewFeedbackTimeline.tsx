@@ -37,6 +37,7 @@ interface FeedbackEntry {
 
 interface InterviewFeedbackTimelineProps {
   candidateId: number;
+  triggerRerender: () => void; // Added triggerRerender prop
 }
 
 // Mock feedback data
@@ -94,6 +95,7 @@ const mockFeedback: Record<number, FeedbackEntry[]> = {
 
 export default function InterviewFeedbackTimeline({
   candidateId,
+  triggerRerender, // Destructure triggerRerender
 }: InterviewFeedbackTimelineProps) {
   const { theme } = useTheme();
   const [feedbackList, setFeedbackList] = useState<FeedbackEntry[]>([]);
@@ -132,7 +134,7 @@ export default function InterviewFeedbackTimeline({
     };
 
     fetchFeedback();
-  }, [candidateId]);
+  }, [candidateId, triggerRerender]); // Added triggerRerender to dependency array
 
   const renderStars = (rating: number) => {
     return (

@@ -12,6 +12,7 @@ import QuickActions from "@/components/candidate-detail/QuickActions";
 import InternalNotes from "@/components/candidate-detail/InternalNotes";
 import CandidateMetadata from "@/components/candidate-detail/CandidateMetadata";
 import { MainLayout } from "../components/layout/MainLayout";
+import { useParentRerender } from "@/lib/useParentRerender";
 
 // Helper function to convert skills string to array
 const parseSkills = (skillsString: string | string[] | undefined): string[] => {
@@ -27,24 +28,32 @@ export default function CandidateDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Use the helper function to create a callback for re-rendering
+  const triggerRerender = useParentRerender(setCandidate);
+
+  const forceRerender = () => {
+    console.log("Parent component re-render triggered"); // Debugging log
+    setCandidate((prev) => ({ ...prev })); // Update state with a new object reference
+  };
+
   useEffect(() => {
     const fetchCandidate = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const response = await fetch(`http://localhost:8000/api/v1/candidate/${candidateId}`, {
           headers: {
-            'accept': 'application/json',
+            accept: "application/json",
           },
         });
 
         if (!response.ok) {
-          throw new Error('Failed to fetch candidate data');
+          throw new Error("Failed to fetch candidate data");
         }
 
         const data = await response.json();
-        
+
         // Transform the API data to match the Candidate interface
         const transformedCandidate: Candidate = {
           ...data,
@@ -54,7 +63,7 @@ export default function CandidateDetail() {
 
         setCandidate(transformedCandidate);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : "An error occurred");
         setCandidate(null);
       } finally {
         setIsLoading(false);
@@ -64,7 +73,7 @@ export default function CandidateDetail() {
     if (candidateId) {
       fetchCandidate();
     }
-  }, [candidateId]);
+  }, [candidateId]); // Removed `candidate` from the dependency array to prevent continuous re-renders
 
   if (isLoading) {
     return (
@@ -132,13 +141,13 @@ export default function CandidateDetail() {
               <ResumeViewer resumeUrl={candidate.resume_url} />
 
               {/* Interview Feedback Timeline */}
-              <InterviewFeedbackTimeline candidateId={candidate.id} />
+              <InterviewFeedbackTimeline candidateId={candidate.id} triggerRerender={forceRerender}/>
             </div>
 
             {/* Right Panel - Action Panel (35%) */}
             <div className="space-y-6">
               {/* Status Update Section */}
-              <StatusUpdateSection candidate={candidate} setCandidate={setCandidate} />
+              <StatusUpdateSection candidate={candidate} setCandidate={setCandidate} triggerRerender={forceRerender} />
 
               {/* Quick Actions */}
               <QuickActions candidate={candidate} />

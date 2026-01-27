@@ -32,3 +32,15 @@ export interface Resume {
     file_size: number;
     uploaded_at: string;
 }
+
+export interface Candidate {
+  id: number;
+  full_name: string;
+  email: string;
+  university: string;
+  status: string;
+  address: string;
+  application_date: string;
+  source: string;
+  college_id: number;
+}
