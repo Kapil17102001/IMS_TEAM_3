@@ -132,7 +132,8 @@ def save_feedback(
     from app.schemas.candidate_interviews import CandidateInterviewsCreate
     candidate_interview_in = CandidateInterviewsCreate(
         candidate_id=candidate_id,
-        round_id=round_id-1,
+        round_id= 4 if round_id in (5, 6) else round_id - 1,
+
         score=rating,
         feedback=feedback,
         status= "rejected" if rating == 6 else "selected"  # Default status

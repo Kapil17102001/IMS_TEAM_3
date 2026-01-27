@@ -1,14 +1,24 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Student } from '../../types/college';
+
+interface Candidate {
+  id: number;
+  full_name: string;
+  email: string;
+  university: string;
+  address: string;
+  status: string;
+}
+
 
 interface OfferLetterUploadProps {
-    student: Student;
+    candidate: Candidate;
     onClose: () => void;
     onSuccess: () => void;
 }
 
-const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ student, onClose, onSuccess }) => {
+const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClose, onSuccess }) => {
+   console.log("Candidate from upload conmponent : ",candidate)
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -50,10 +60,11 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ student, onClose,
                 formData.append('files', file);
             });
 
-            formData.append('studentId', student.id);
-            formData.append('studentName', student.name);
-            formData.append('rollNumber', student.rollNumber);
-            formData.append('email', student.email);
+            formData.append('candidateId', candidate.id.toString());
+            formData.append('candidateName', candidate.full_name);
+            formData.append('email', candidate.email);
+            formData.append('university', candidate.university);
+            formData.append('address', candidate.address);
 
             console.log(`Uploading ${selectedFiles.length} file(s) to backend...`);
 
@@ -100,7 +111,7 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ student, onClose,
             <div className="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
                 <h3 className="text-xl font-bold mb-4">Upload Offer Letters</h3>
                 <p className="text-gray-600 mb-4">
-                    Student: <span className="font-semibold">{student.name}</span>
+                    Candidate: <span className="font-semibold">{candidate.full_name}</span>
                 </p>
 
                 {error && (

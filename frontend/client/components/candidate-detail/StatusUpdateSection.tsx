@@ -33,6 +33,7 @@ import { useTheme } from "@/context/ThemeContext";
 interface StatusUpdateSectionProps {
   candidate: Candidate;
   setCandidate: (candidate: Candidate) => void;
+  triggerRerender: () => void; // Added triggerRerender prop
 }
 
 const statusBgColors: Record<string, string> = {
@@ -69,6 +70,7 @@ export const getStatusAsInt = (status: CandidateStatus): number => {
 export default function StatusUpdateSection({
   candidate,
   setCandidate,
+  triggerRerender, // Destructure triggerRerender
 }: StatusUpdateSectionProps) {
   const { theme } = useTheme();
 
@@ -150,6 +152,8 @@ export default function StatusUpdateSection({
       };
 
       setCandidate(updatedCandidate);
+      console.log("Triggering parent re-render..."); // Debugging log
+      triggerRerender(); // Trigger parent re-render
       setSelectedStatus("");
       setFeedback("");
       setRating(0);

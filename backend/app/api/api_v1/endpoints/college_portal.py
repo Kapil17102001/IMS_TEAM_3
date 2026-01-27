@@ -112,14 +112,14 @@ def delete_student(
 
 @router.post("/upload")
 async def upload_files(
-    studentId: int = Form(...),
+    candidateId: int = Form(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(deps.get_db)
 ) -> Any:
-    # Verify student exists
-    student = db.query(CollegeStudent).filter(CollegeStudent.id == studentId).first()
-    if not student:
-        raise HTTPException(status_code=404, detail="Student not found")
+    # Verify candidate exists
+    candidate = db.query(models.Candidate).filter(models.Candidate.id == candidateId).first()
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
 
     uploaded_files_data = []
     for file in files:
@@ -139,7 +139,7 @@ async def upload_files(
 
         # Save to database
         db_file = UploadedFile(
-            student_id=studentId,
+            candidate_id=candidateId,
             file_name=file.filename,
             file_path=file_path,
             file_size=file_size
@@ -158,7 +158,7 @@ async def upload_files(
     return {
         "message": f"{len(uploaded_files_data)} file(s) uploaded successfully",
         "data": {
-            "studentId": studentId,
+            "candidateId": candidateId,
             "files": uploaded_files_data
         }
     }
@@ -244,9 +244,9 @@ def delete_resume(resume_id: int, db: Session = Depends(deps.get_db)) -> Any:
 def get_all_uploads(db: Session = Depends(deps.get_db)) -> Any:
     return db.query(UploadedFile).order_by(UploadedFile.uploaded_at.desc()).all()
 
-@router.get("/uploads/student/{studentId}", response_model=List[FileSchema])
-def get_student_uploads(studentId: int, db: Session = Depends(deps.get_db)) -> Any:
-    return db.query(UploadedFile).filter(UploadedFile.student_id == studentId).order_by(UploadedFile.uploaded_at.desc()).all()
+@router.get("/uploads/student/{candidateId}", response_model=List[FileSchema])
+def get_student_uploads(candidateId: int, db: Session = Depends(deps.get_db)) -> Any:
+    return db.query(UploadedFile).filter(UploadedFile.student_id == candidateId).order_by(UploadedFile.uploaded_at.desc()).all()
 
 @router.get("/uploads/download/{id}")
 def download_file(id: int, db: Session = Depends(deps.get_db)):
