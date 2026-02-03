@@ -14,6 +14,14 @@ router = APIRouter()
 @router.post("/tasks", response_model=Task)
 def create_new_task(task_data: TaskCreate, db: Session = Depends(get_db), user_id: int = 1):
     """Create a new task."""
+    # Check if user exists, if not use the first available user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        user = db.query(User).first()
+        if not user:
+            raise HTTPException(status_code=400, detail="No users found in database to assign as creator")
+        user_id = user.id
+        
     task = create_task(db, task_data, user_id)
 
     # Convert the SQLAlchemy model instance to a dictionary

@@ -162,14 +162,14 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card text-card-foreground rounded-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden shadow-2xl flex flex-col border border-border animate-in fade-in zoom-in duration-200">
                 {/* Header */}
                 <div className="bg-indigo-600 text-white p-6 flex-shrink-0">
                     <div className="flex justify-between items-start">
                         <div>
-                            <h2 className="text-3xl font-bold mb-2">Student Details</h2>
-                            <p className="text-indigo-100">Complete information and uploaded files</p>
+                            <h2 className="text-3xl font-bold mb-1">Student Details</h2>
+                            <p className="text-indigo-100/80 text-sm">Complete profile and documentation</p>
                         </div>
                         <button
                             onClick={onClose}
@@ -181,30 +181,31 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                 </div>
 
                 {/* Content - Scrollable */}
-                <div className="p-6 overflow-y-auto flex-1">
+                <div className="p-8 overflow-y-auto flex-1 custom-scrollbar">
                     {/* Student Information */}
-                    <div className="mb-6">
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                            <span>👤</span>
+                    <div className="mb-8">
+                        <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-3">
+                            <span className="p-2 bg-primary/10 rounded-lg text-primary text-base">👤</span>
                             <span>Personal Information</span>
                         </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-accent/5 p-6 rounded-2xl border border-border">
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Name</label>
-                                <p className="text-lg font-semibold text-gray-900">{student.name}</p>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Name</label>
+                                <p className="text-lg font-bold text-foreground mt-1">{student.name}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Roll Number</label>
-                                <p className="text-lg font-mono font-semibold text-gray-900">{student.rollNumber}</p>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Roll Number</label>
+                                <p className="text-lg font-mono font-bold text-foreground mt-1">{student.rollNumber}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Email</label>
-                                <p className="text-lg text-gray-900">{student.email}</p>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Email</label>
+                                <p className="text-lg font-medium text-foreground mt-1">{student.email}</p>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-600">Status</label>
-                                <div className="mt-1">
-                                    <span className={`inline-flex items-center px-3 py-1 text-sm font-semibold badge-3d ${statusColors[student.status]}`}>
+                                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Status</label>
+                                <div className="mt-2">
+                                    <span className={`inline-flex items-center px-4 py-1.5 text-xs font-bold rounded-full ${statusColors[student.status]}`}>
+                                        <span className="w-1.5 h-1.5 bg-white rounded-full mr-2 animate-pulse" />
                                         {statusLabels[student.status]}
                                     </span>
                                 </div>
@@ -213,8 +214,8 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                                 <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {student.hiringDate && (
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Hiring Date</label>
-                                            <p className="text-lg font-semibold text-green-700">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Hiring Date</label>
+                                            <p className="text-lg font-bold text-green-600 mt-1">
                                                 {new Date(student.hiringDate).toLocaleDateString('en-US', {
                                                     year: 'numeric',
                                                     month: 'long',
@@ -225,8 +226,8 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                                     )}
                                     {student.joiningDate && (
                                         <div>
-                                            <label className="text-sm font-medium text-gray-600">Joining Date</label>
-                                            <p className="text-lg font-semibold text-indigo-700">
+                                            <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Joining Date</label>
+                                            <p className="text-lg font-bold text-indigo-500 mt-1">
                                                 {new Date(student.joiningDate).toLocaleDateString('en-US', {
                                                     year: 'numeric',
                                                     month: 'long',
@@ -239,8 +240,8 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                             )}
                             {student.status !== 'HIRED' && student.roundDetails && (
                                 <div className="md:col-span-2">
-                                    <label className="text-sm font-medium text-gray-600">Round Details</label>
-                                    <p className="text-base text-gray-900 bg-blue-50 p-3 rounded border-l-4 border-blue-500">
+                                    <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Round Details</label>
+                                    <p className="text-base text-foreground bg-primary/5 p-4 rounded-xl border-l-4 border-primary mt-2">
                                         {student.roundDetails}
                                     </p>
                                 </div>
@@ -250,12 +251,12 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
 
                     {/* Upload Files Section */}
                     {student.status === 'HIRED' && (
-                        <div className="mb-6">
-                            <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                                <span>📤</span>
+                        <div className="mb-8">
+                            <h3 className="text-xl font-bold mb-4 text-foreground flex items-center gap-3">
+                                <span className="p-2 bg-primary/10 rounded-lg text-primary text-base">📤</span>
                                 <span>Upload Files</span>
                             </h3>
-                            <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="bg-accent/5 p-6 rounded-2xl border border-border">
                                 <input
                                     id="file-upload"
                                     type="file"
@@ -264,19 +265,24 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                                     className="hidden"
                                 />
                                 {selectedFiles && selectedFiles.length > 0 && (
-                                    <div className="mb-3">
-                                        <p className="text-sm text-gray-600 mb-2">Selected files:</p>
-                                        <ul className="text-sm text-gray-700 list-disc list-inside">
+                                    <div className="mb-4 p-4 bg-background/50 rounded-xl border border-dashed border-border/50">
+                                        <p className="text-sm font-bold text-foreground mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                                            Target Files ({selectedFiles.length}):
+                                        </p>
+                                        <ul className="text-sm text-muted-foreground space-y-1 ml-3 font-medium">
                                             {Array.from(selectedFiles).map((file, index) => (
-                                                <li key={index}>{file.name} ({formatFileSize(file.size)})</li>
+                                                <li key={index} className="flex items-center gap-2 truncate">
+                                                    <span className="opacity-40">•</span> {file.name} ({(file.size / 1024).toFixed(1)} KB)
+                                                </li>
                                             ))}
                                         </ul>
                                     </div>
                                 )}
-                                <div className="flex gap-2">
+                                <div className="flex gap-3">
                                     <button
                                         onClick={() => document.getElementById('file-upload')?.click()}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium btn-3d"
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-sm hover:bg-primary/20 transition-all shadow-sm"
                                     >
                                         <span>📁</span>
                                         <span>Choose Files</span>
@@ -285,9 +291,9 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                                         <button
                                             onClick={handleUpload}
                                             disabled={uploading}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium btn-3d disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white rounded-xl font-bold text-sm hover:bg-green-600 transition-all shadow-lg shadow-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
-                                            {uploading ? '⏳ Uploading...' : '✓ Upload'}
+                                            {uploading ? '⏳ Uploading...' : '✓ Start Upload'}
                                         </button>
                                     )}
                                 </div>
@@ -297,51 +303,59 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
 
                     {/* Uploaded Files */}
                     <div>
-                        <h3 className="text-xl font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                            <span>📁</span>
-                            <span>Uploaded Files ({files.length})</span>
+                        <h3 className="text-xl font-bold mb-4 text-foreground flex items-center justify-between">
+                            <span className="flex items-center gap-3">
+                                <span className="p-2 bg-blue-500/10 rounded-lg text-blue-500 text-base">📁</span>
+                                Uploaded Documents
+                            </span>
+                            <span className="px-3 py-1 bg-accent/10 rounded-full text-xs font-bold text-muted-foreground border border-border/50">
+                                {files.length} Files
+                            </span>
                         </h3>
 
                         {loading ? (
-                            <div className="text-center py-8 text-gray-500">
-                                Loading files...
+                            <div className="text-center py-12 text-muted-foreground flex flex-col items-center gap-3 bg-accent/5 rounded-2xl border border-dashed border-border">
+                                <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                                <span className="font-medium">Fetching documents...</span>
                             </div>
                         ) : files.length === 0 ? (
-                            <div className="text-center py-8 bg-gray-50 rounded-lg">
-                                <span className="text-4xl mb-2 block">📂</span>
-                                <p className="text-gray-500">No files uploaded yet</p>
+                            <div className="text-center py-12 bg-accent/5 rounded-2xl border border-dashed border-border flex flex-col items-center gap-3">
+                                <span className="text-5xl opacity-20">📂</span>
+                                <p className="text-muted-foreground font-medium">No files uploaded yet</p>
                             </div>
                         ) : (
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                                 {files.map((file) => (
                                     <div
                                         key={file.id}
-                                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                                        className="flex items-center justify-between p-5 bg-background border border-border rounded-2xl hover:bg-accent/5 hover:border-sidebar-border transition-all group"
                                     >
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-2xl">📄</span>
+                                        <div className="flex-1 min-w-0 pr-4">
+                                            <div className="flex items-center gap-4">
+                                                <div className="p-2 bg-red-500/10 rounded-lg text-red-500">
+                                                    <span className="text-xl">📄</span>
+                                                </div>
                                                 <div className="min-w-0">
-                                                    <p className="font-medium text-gray-900 truncate">
+                                                    <p className="font-bold text-foreground truncate text-sm">
                                                         {file.file_name}
                                                     </p>
-                                                    <p className="text-sm text-gray-500">
-                                                        {formatFileSize(file.file_size)} • {formatDate(file.uploaded_at)}
+                                                    <p className="text-xs text-muted-foreground mt-1 font-medium">
+                                                        ⚖️ {formatFileSize(file.file_size)} • 📅 {formatDate(file.uploaded_at)}
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2 ml-4">
+                                        <div className="flex gap-3 ml-auto flex-shrink-0">
                                             <button
                                                 onClick={() => handleDownload(file.id, file.file_name)}
-                                                className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium btn-3d"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary border border-primary/20 rounded-xl text-xs font-bold hover:bg-primary/20 transition-all flex items-center"
                                             >
                                                 <span>⬇️</span>
                                                 <span>Download</span>
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(file.id)}
-                                                className="inline-flex items-center gap-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium btn-3d"
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-destructive/10 text-destructive border border-destructive/20 rounded-xl text-xs font-bold hover:bg-destructive/20 transition-all flex items-center"
                                             >
                                                 <span>🗑️</span>
                                                 <span>Delete</span>
@@ -355,12 +369,12 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
                 </div>
 
                 {/* Footer - Fixed at bottom */}
-                <div className="border-t border-gray-200 p-4 bg-gray-50 flex justify-end flex-shrink-0">
+                <div className="border-t border-border p-6 bg-accent/5 flex justify-end flex-shrink-0">
                     <button
                         onClick={onClose}
-                        className="px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium btn-3d"
+                        className="px-8 py-2.5 bg-sidebar-foreground/10 text-sidebar-foreground border border-sidebar-foreground/20 rounded-xl font-bold text-sm hover:bg-sidebar-foreground/20 transition-all shadow-sm"
                     >
-                        Close
+                        Close Profile
                     </button>
                 </div>
             </div>

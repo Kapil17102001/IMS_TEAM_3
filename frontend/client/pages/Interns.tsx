@@ -7,6 +7,7 @@ import { Pencil, Trash2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Intern {
   id: number;
@@ -25,30 +26,41 @@ interface Intern {
 
 export default function Interns() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [interns, setInterns] = useState<Intern[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
 
+  const [pendingCount, setPendingCount] = useState(0);
+
   const fetchInterns = async () => {
     setIsLoading(true);
     setError(null);
     try {
+      // Fetch Interns
       const response = await fetch("http://localhost:8000/api/v1/interns/?skip=0&limit=100", {
-        headers: {
-          "Accept": "application/json",
-        },
+        headers: { "Accept": "application/json" },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch interns");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch interns");
       const data = await response.json();
       setInterns(data);
+
+      // Fetch Hired Candidates to see who is pending
+      const hiredResponse = await fetch("http://localhost:8000/api/v1/candidate/status/HIRED?skip=0&limit=100", {
+        headers: { "Accept": "application/json" },
+      });
+      if (hiredResponse.ok) {
+        const hiredData = await hiredResponse.json();
+        const pending = hiredData.filter((c: any) =>
+          !data.some((i: any) => i.email.toLowerCase() === c.email.toLowerCase())
+        );
+        setPendingCount(pending.length);
+      }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to fetch interns";
+      const errorMessage = err instanceof Error ? err.message : "Failed to fetch data";
       setError(errorMessage);
       toast({
         title: "Error",
@@ -109,7 +121,7 @@ export default function Interns() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
+    const statusLower = status?.toLowerCase() || "";
     switch (statusLower) {
       case "active":
         return <Badge className="bg-green-500 text-white">Active</Badge>;
@@ -125,8 +137,8 @@ export default function Interns() {
   };
 
   const getGenderStats = () => {
-    const male = interns.filter(i => i.gender.toLowerCase() === "male").length;
-    const female = interns.filter(i => i.gender.toLowerCase() === "female").length;
+    const male = interns.filter(i => i.gender?.toLowerCase() === "male").length;
+    const female = interns.filter(i => i.gender?.toLowerCase() === "female").length;
     return { male, female };
   };
 
@@ -138,7 +150,7 @@ export default function Interns() {
       intern.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || intern.status.toLowerCase() === statusFilter;
+      statusFilter === "all" || intern.status?.toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -182,7 +194,7 @@ export default function Interns() {
             </Button>
             {["active", "onboarding", "completed", "terminated"].map((status) => {
               const count = interns.filter(
-                (i) => i.status.toLowerCase() === status
+                (i) => i.status?.toLowerCase() === status
               ).length;
               return (
                 <Button
@@ -199,10 +211,23 @@ export default function Interns() {
         </Card>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Total Interns</p>
             <p className="text-3xl font-bold mt-2">{interns.length}</p>
+          </Card>
+          <Card className="p-6 relative overflow-hidden bg-amber-500/5 border-amber-500/20">
+            <p className="text-sm font-medium text-muted-foreground">Pending Onboarding</p>
+            <p className="text-3xl font-bold mt-2 text-amber-500">{pendingCount}</p>
+            {pendingCount > 0 && (
+              <Button
+                variant="link"
+                className="p-0 h-auto text-xs text-amber-600 mt-2 hover:text-amber-700"
+                onClick={() => navigate("/onboarding")}
+              >
+                Go to Onboarding →
+              </Button>
+            )}
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Male</p>
@@ -279,7 +304,7 @@ export default function Interns() {
                           <td className="px-6 py-4 text-sm text-foreground">{intern.university}</td>
                           <td className="px-6 py-4 text-sm text-foreground">{intern.department}</td>
                           <td className="px-6 py-4 text-center">
-                            <span className="capitalize text-sm text-foreground">{intern.gender}</span>
+                            <span className="capitalize text-sm text-foreground">{intern.gender || "—"}</span>
                           </td>
                           <td className="px-6 py-4 text-center">{getStatusBadge(intern.status)}</td>
                           <td className="px-6 py-4">

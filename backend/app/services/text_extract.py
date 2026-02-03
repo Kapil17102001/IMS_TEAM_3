@@ -26,13 +26,13 @@ class PDFExtractionService:
         self.candidate_service = CandidateService()
         self.college_service = CollegeService()  # Initialize CollegeService
 
-    def extract_and_process_resumes(self,college_id:int) -> Dict[str, str]:
+    def extract_and_process_resumes(self, college_id: int = 1, file_list: List[str] = None) -> Dict[str, str]:
         """
-        Extract text from all PDF files in backend/documents/resume,
-        process each using LLM to extract candidate information,
-        and save to the database.
-
-        :return: Dictionary mapping filename -> status (success/error message)
+        Extract text from PDF files, process each using LLM, and save to database.
+        
+        :param college_id: ID of the college uploading the resumes
+        :param file_list: Optional list of filenames to process. If None, scans the directory.
+        :return: Dictionary mapping filename -> status
         """
         results: Dict[str, str] = {}
 
@@ -41,17 +41,20 @@ class PDFExtractionService:
             logger.error(f"Resume directory does not exist: {self.BASE_RESUME_PATH}")
             return {"error": f"Directory {self.BASE_RESUME_PATH} not found"}
 
-        # Get all PDF files
-        pdf_files = [
-            f for f in os.listdir(self.BASE_RESUME_PATH)
-            if f.lower().endswith(".pdf")
-        ]
+        # Get PDF files to process
+        if file_list:
+            pdf_files = [f for f in file_list if f.lower().endswith(".pdf")]
+        else:
+            pdf_files = [
+                f for f in os.listdir(self.BASE_RESUME_PATH)
+                if f.lower().endswith(".pdf")
+            ]
 
         if not pdf_files:
-            logger.warning("No PDF files found in resume directory.")
+            logger.warning("No PDF files to process.")
             return {"warning": "No PDF files found"}
 
-        logger.info(f"Found {len(pdf_files)} PDF files to process")
+        logger.info(f"Processing {len(pdf_files)} PDF files")
 
         # Create database session
         db = SessionLocal()

@@ -149,7 +149,7 @@ def read_candidates_by_status(
     return candidates
 
 
-@router.get("/hired/{user_id}", response_model=List[Candidate])
+@router.get("/onboarded/{user_id}", response_model=List[Candidate])
 def read_hired_candidates_by_user(
     user_id: int,
     db: Session = Depends(deps.get_db),
@@ -164,7 +164,7 @@ def read_hired_candidates_by_user(
 
     # Fetch all candidates with "hired" status
     candidates = candidate_service.get_candidates_by_status(
-        db, status="HIRED", skip=skip, limit=limit
+        db, status="ONBOARDED", skip=skip, limit=limit
     )
 
     # Filter candidates by college_id

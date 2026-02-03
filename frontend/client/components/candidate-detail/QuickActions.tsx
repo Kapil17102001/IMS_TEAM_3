@@ -9,7 +9,7 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
-} from "lucide-react"; 
+} from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 interface QuickActionsProps {
