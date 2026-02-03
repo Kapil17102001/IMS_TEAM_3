@@ -2,12 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 interface Candidate {
-  id: number;
-  full_name: string;
-  email: string;
-  university: string;
-  address: string;
-  status: string;
+    id: number;
+    full_name: string;
+    email: string;
+    university: string;
+    address: string;
+    status: string;
 }
 
 
@@ -18,7 +18,7 @@ interface OfferLetterUploadProps {
 }
 
 const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClose, onSuccess }) => {
-   console.log("Candidate from upload conmponent : ",candidate)
+    console.log("Candidate from upload conmponent : ", candidate)
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
@@ -107,11 +107,11 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClos
     });
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
-                <h3 className="text-xl font-bold mb-4">Upload Offer Letters</h3>
-                <p className="text-gray-600 mb-4">
-                    Candidate: <span className="font-semibold">{candidate.full_name}</span>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-card text-card-foreground rounded-2xl shadow-2xl border border-border p-8 w-full max-w-[500px] max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
+                <h3 className="text-2xl font-bold mb-2">Upload Offer Letters</h3>
+                <p className="text-muted-foreground mb-6">
+                    Candidate: <span className="font-semibold text-foreground">{candidate.full_name}</span>
                 </p>
 
                 {error && (
@@ -128,35 +128,38 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClos
 
                 <div
                     {...getRootProps()}
-                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors mb-4 ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'
+                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all mb-6 ${isDragActive ? 'border-primary bg-primary/5 scale-[1.02]' : 'border-border hover:border-primary hover:bg-accent/5'
                         } ${uploading || success ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                     <input {...getInputProps()} />
                     {isDragActive ? (
-                        <p className="text-blue-600">Drop the PDFs here...</p>
+                        <p className="text-primary font-medium">Drop the PDFs here...</p>
                     ) : (
                         <div>
-                            <p className="text-gray-600 mb-2">Drag & drop PDF files here</p>
-                            <p className="text-gray-400 text-sm">or click to select (max 10 files)</p>
+                            <p className="text-muted-foreground mb-2">Drag & drop PDF files here</p>
+                            <p className="text-muted-foreground/60 text-sm">or click to select (max 10 files)</p>
                         </div>
                     )}
                 </div>
 
                 {/* Selected Files List */}
                 {selectedFiles.length > 0 && !success && (
-                    <div className="mb-4">
-                        <h4 className="font-semibold mb-2">Selected Files ({selectedFiles.length}):</h4>
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                    <div className="mb-6">
+                        <h4 className="font-semibold mb-3 text-sm flex items-center gap-2">
+                            <span className="w-1 h-1 bg-primary rounded-full" />
+                            Selected Files ({selectedFiles.length})
+                        </h4>
+                        <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
                             {selectedFiles.map((file, index) => (
-                                <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                <div key={index} className="flex items-center justify-between bg-accent/5 p-3 rounded-lg border border-border group transition-all hover:bg-accent/10">
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium truncate">{file.name}</p>
-                                        <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+                                        <p className="text-xs text-muted-foreground">{(file.size / 1024).toFixed(2)} KB</p>
                                     </div>
                                     <button
                                         onClick={() => removeFile(index)}
                                         disabled={uploading}
-                                        className="ml-2 text-red-600 hover:text-red-800 disabled:opacity-50"
+                                        className="ml-2 text-muted-foreground hover:text-destructive transition-colors p-1"
                                     >
                                         ✕
                                     </button>
@@ -166,11 +169,11 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClos
                     </div>
                 )}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-3 mt-4">
                     <button
                         onClick={onClose}
                         disabled={uploading}
-                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+                        className="px-6 py-2.5 border border-border rounded-xl font-medium text-sm hover:bg-accent transition-colors disabled:opacity-50"
                     >
                         {success ? 'Close' : 'Cancel'}
                     </button>
@@ -178,9 +181,16 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClos
                         <button
                             onClick={handleUpload}
                             disabled={uploading}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+                            className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:opacity-90 shadow-lg shadow-primary/20 transition-all disabled:opacity-50 flex items-center gap-2"
                         >
-                            {uploading ? 'Uploading...' : `Upload ${selectedFiles.length} File(s)`}
+                            {uploading ? (
+                                <>
+                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Uploading...
+                                </>
+                            ) : (
+                                `Upload ${selectedFiles.length} File(s)`
+                            )}
                         </button>
                     )}
                 </div>

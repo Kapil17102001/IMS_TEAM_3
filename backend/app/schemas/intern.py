@@ -19,6 +19,7 @@ class InternBase(BaseModel):
 class InternCreate(InternBase):
     full_name: str
     email: EmailStr
+    candidate_id: Optional[int] = None
 
 class InternUpdate(InternBase):
     pass

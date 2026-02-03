@@ -1,5 +1,5 @@
 from typing import Any, List
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Response, BackgroundTasks
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 import os
@@ -166,6 +166,7 @@ async def upload_files(
 @router.post("/resumes/upload/{user_id}")
 async def upload_resumes(
     user_id: int,
+    background_tasks: BackgroundTasks,
     resumes: List[UploadFile] = File(...),
     db: Session = Depends(deps.get_db)
 ) -> Any:
@@ -175,6 +176,8 @@ async def upload_resumes(
         raise HTTPException(status_code=404, detail="College ID not found for the user")
 
     uploaded_resumes_data = []
+    file_names_to_process = []
+
     for file in resumes:
         if not file.filename.lower().endswith('.pdf'):
             continue
@@ -192,7 +195,7 @@ async def upload_resumes(
             file_name=file.filename,
             file_path=file_path,
             file_size=file_size,
-            college_id = college_id
+            college_id=college_id
         )
         db.add(db_resume)
         db.commit()
@@ -205,11 +208,20 @@ async def upload_resumes(
             "uploadedAt": db_resume.uploaded_at,
             "college_id": college_id
         })
+        
+        # Add the UNIQUE filename on disk to process later
+        file_names_to_process.append(unique_filename)
 
-        results = pdf_extraction_service.extract_and_process_resumes(college_id)
+    # Process resumes in the background so the user doesn't have to wait
+    if file_names_to_process:
+        background_tasks.add_task(
+            pdf_extraction_service.extract_and_process_resumes, 
+            college_id, 
+            file_names_to_process
+        )
 
     return {
-        "message": f"{len(uploaded_resumes_data)} resume(s) uploaded successfully",
+        "message": f"{len(uploaded_resumes_data)} resume(s) uploaded successfully. Processing started in background.",
         "data": uploaded_resumes_data
     }
 
@@ -246,7 +258,7 @@ def get_all_uploads(db: Session = Depends(deps.get_db)) -> Any:
 
 @router.get("/uploads/student/{candidateId}", response_model=List[FileSchema])
 def get_student_uploads(candidateId: int, db: Session = Depends(deps.get_db)) -> Any:
-    return db.query(UploadedFile).filter(UploadedFile.student_id == candidateId).order_by(UploadedFile.uploaded_at.desc()).all()
+    return db.query(UploadedFile).filter(UploadedFile.candidate_id == candidateId).order_by(UploadedFile.uploaded_at.desc()).all()
 
 @router.get("/uploads/download/{id}")
 def download_file(id: int, db: Session = Depends(deps.get_db)):
@@ -260,6 +272,21 @@ def download_file(id: int, db: Session = Depends(deps.get_db)):
     return FileResponse(
         path=db_file.file_path,
         filename=db_file.file_name,
+        media_type='application/pdf'
+    )
+
+@router.get("/resumes/download/{resume_id}")
+def download_resume(resume_id: int, db: Session = Depends(deps.get_db)):
+    db_resume = db.query(StudentResume).filter(StudentResume.id == resume_id).first()
+    if not db_resume:
+        raise HTTPException(status_code=404, detail="Resume not found")
+
+    if not os.path.exists(db_resume.file_path):
+        raise HTTPException(status_code=404, detail="Resume file not found on server")
+
+    return FileResponse(
+        path=db_resume.file_path,
+        filename=db_resume.file_name,
         media_type='application/pdf'
     )
 

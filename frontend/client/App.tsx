@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AdminRoutes = ({ lastPath }: { lastPath: string | null }) => {
   const validPaths = ["/", "/onboarding", "/performance", "/interns", "/planner", "/college"];
   const defaultPath = lastPath && validPaths.includes(lastPath) ? lastPath : "/";
-  
+
   return (
     <Routes>
       <Route path="/" element={<Index />} />
@@ -44,7 +44,7 @@ const AdminRoutes = ({ lastPath }: { lastPath: string | null }) => {
       <Route path="/interns" element={<Interns />} />
       <Route path="/planner" element={<Planner />} />
       <Route path="/college" element={<College />} />
-      <Route path="*" element={<Navigate to={defaultPath} replace />}  />
+      <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
   );
 };
@@ -52,7 +52,7 @@ const AdminRoutes = ({ lastPath }: { lastPath: string | null }) => {
 const CollegeRoutes = ({ lastPath }: { lastPath: string | null }) => {
   const validPaths = ["/selected-students", "/resumes-upload"];
   const defaultPath = lastPath && validPaths.includes(lastPath) ? lastPath : "/selected-students";
-  
+
   return (
     <Routes>
       <Route path="/selected-students" element={<CollegePortal />} />
@@ -64,7 +64,7 @@ const CollegeRoutes = ({ lastPath }: { lastPath: string | null }) => {
 
 const InternRoutes = ({ lastPath }: { lastPath: string | null }) => {
   const defaultPath = lastPath === "/planner" ? lastPath : "/planner";
-  
+
   return (
     <Routes>
       <Route path="/planner" element={<Planner />} />
@@ -77,24 +77,24 @@ const PanelRoutes = ({ lastPath }: { lastPath: string | null }) => {
   const validPathPatterns = ["/candidates", "/candidate/"];
   const isValidPath = lastPath && validPathPatterns.some(pattern => lastPath.startsWith(pattern));
   const defaultPath = isValidPath ? lastPath : "/candidates";
-  
+
   return (
     <Routes>
       <Route path="/candidates" element={<Candidates />} />
       <Route path="/candidate/:candidateId" element={<CandidateDetail />} />
-      <Route path="*" element={<Navigate to={defaultPath} replace />} />
+      <Route path="*" element={<Navigate to="/candidates" replace />} />
     </Routes>
   );
 };
 
 const PathTracker = () => {
   const location = useLocation();
-  
+
   useEffect(() => {
     // Store current path in localStorage whenever it changes
     localStorage.setItem("lastPath", location.pathname);
   }, [location.pathname]);
-  
+
   return null;
 };
 
@@ -109,7 +109,7 @@ const AppContent = () => {
     if (!hasRestored && user) {
       const savedPath = localStorage.getItem("lastPath");
       const currentPath = location.pathname;
-      
+
       // If we're on the root or a generic path and have a saved path, navigate to it
       if (savedPath && currentPath !== savedPath && (currentPath === "/" || currentPath === "/login")) {
         navigate(savedPath, { replace: true });

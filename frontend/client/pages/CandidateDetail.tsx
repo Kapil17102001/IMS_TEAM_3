@@ -13,6 +13,7 @@ import InternalNotes from "@/components/candidate-detail/InternalNotes";
 import CandidateMetadata from "@/components/candidate-detail/CandidateMetadata";
 import { MainLayout } from "../components/layout/MainLayout";
 import { useParentRerender } from "@/lib/useParentRerender";
+import { useUser } from "../context/UserContext";
 
 // Helper function to convert skills string to array
 const parseSkills = (skillsString: string | string[] | undefined): string[] => {
@@ -27,6 +28,7 @@ export default function CandidateDetail() {
   const [candidate, setCandidate] = useState<Candidate | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useUser();
 
   // Use the helper function to create a callback for re-rendering
   const triggerRerender = useParentRerender(setCandidate);
@@ -110,28 +112,16 @@ export default function CandidateDetail() {
     );
   }
 
+  const isCollegeUser = user?.role === 'college';
+
   return (
     <MainLayout>
       <div className="space-y-8">
-        {/* Header */}
-        <div className="border-b bg-background sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-1 py-1 flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => navigate("/")}> 
-              <ArrowLeft className="h-4 w-4 mr-1" />
-              Back
-            </Button>
-            <div>
-              {/* <h1 className="text-4xl font-bold text-foreground">{candidate.full_name}</h1>
-              <p className="text-muted-foreground text-sm">ID: {candidate.id}</p> */}
-            </div>
-          </div>
-        </div>
-
         {/* Two-Column Layout */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Panel - Primary Content (65%) */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className={`lg:col-span-2 space-y-8 ${isCollegeUser ? 'lg:col-span-3' : ''}`}>
               {/* Sticky Overview Card */}
               <div className="lg:top-20">
                 <CandidateOverviewCard candidate={candidate} />
@@ -140,24 +130,26 @@ export default function CandidateDetail() {
               {/* Resume Viewer */}
               <ResumeViewer resumeUrl={candidate.resume_url} />
 
-              {/* Interview Feedback Timeline */}
-              <InterviewFeedbackTimeline candidateId={candidate.id} triggerRerender={forceRerender}/>
+              {/* Interview Feedback Timeline - Visible for All Users */}
+              <InterviewFeedbackTimeline candidateId={candidate.id} triggerRerender={forceRerender} />
             </div>
 
-            {/* Right Panel - Action Panel (35%) */}
-            <div className="space-y-6">
-              {/* Status Update Section */}
-              <StatusUpdateSection candidate={candidate} setCandidate={setCandidate} triggerRerender={forceRerender} />
+            {/* Right Panel - Action Panel (35%) - Hidden for College Users */}
+            {!isCollegeUser && (
+              <div className="space-y-6">
+                {/* Status Update Section */}
+                <StatusUpdateSection candidate={candidate} setCandidate={setCandidate} triggerRerender={forceRerender} />
 
-              {/* Quick Actions */}
-              <QuickActions candidate={candidate} />
+                {/* Quick Actions */}
+                <QuickActions candidate={candidate} />
 
-              {/* Internal Notes */}
-              <InternalNotes candidateId={candidate.id} />
+                {/* Internal Notes */}
+                <InternalNotes candidateId={candidate.id} />
 
-              {/* Candidate Metadata */}
-              <CandidateMetadata candidate={candidate} />
-            </div>
+                {/* Candidate Metadata */}
+                <CandidateMetadata candidate={candidate} />
+              </div>
+            )}
           </div>
         </div>
       </div>

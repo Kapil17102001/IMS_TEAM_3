@@ -19,11 +19,13 @@ export default function Performance() {
   const [searchQuery, setSearchQuery] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const { interns, loading, error } = useInterns();
+  const { interns, loading, error, refreshInterns } = useInterns();
   const [internTasks, setInternTasks] = useState<Record<number, any[]>>({});
+  const [tasksLoading, setTasksLoading] = useState(false);
 
   useEffect(() => {
     async function fetchTasks() {
+      setTasksLoading(true);
       const tasksByIntern: Record<number, any[]> = {};
       for (const intern of interns) {
         try {
@@ -42,18 +44,20 @@ export default function Performance() {
         }
       }
       setInternTasks(tasksByIntern);
+      setTasksLoading(false);
     }
 
+    refreshInterns();
     if (interns.length > 0) {
       fetchTasks();
     }
-  }, [interns]);
+  }, [interns.length]); // Use length to detect new interns, but mounting will trigger it too
 
   const calculatePerformanceScore = (internId: number) => {
     const tasks = internTasks[internId] || [];
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(
-      (task) => task.status.toLowerCase() === "done"
+      (task) => task.status?.toLowerCase() === "done"
     ).length;
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   };
@@ -65,14 +69,14 @@ export default function Performance() {
 
   const departments = [
     "all",
-    ...Array.from(new Set(interns.map((i) => i.department))),
+    ...Array.from(new Set(interns.map((i) => i.department || "General"))),
   ];
 
   const filteredInterns = useMemo(() => {
     return enhancedInterns.filter((intern) => {
       const matchesSearch =
-        intern.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        intern.email.toLowerCase().includes(searchQuery.toLowerCase());
+        (intern.full_name?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+        (intern.email?.toLowerCase() || "").includes(searchQuery.toLowerCase());
       const matchesDept =
         departmentFilter === "all" || intern.department === departmentFilter;
       const matchesStatus =
@@ -134,19 +138,19 @@ export default function Performance() {
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Good Performance</p>
             <p className="text-3xl font-bold mt-2 text-success">
-              {interns.filter((i) => i.status === "good").length}
+              {enhancedInterns.filter((i) => i.performanceScore >= 80).length}
             </p>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Average</p>
             <p className="text-3xl font-bold mt-2 text-warning">
-              {interns.filter((i) => i.status === "average").length}
+              {enhancedInterns.filter((i) => i.performanceScore >= 70 && i.performanceScore < 80).length}
             </p>
           </Card>
           <Card className="p-6">
             <p className="text-sm font-medium text-muted-foreground">Needs Improvement</p>
             <p className="text-3xl font-bold mt-2 text-destructive">
-              {interns.filter((i) => i.status === "needs-improvement").length}
+              {enhancedInterns.filter((i) => i.performanceScore < 70).length}
             </p>
           </Card>
         </div>
@@ -243,7 +247,7 @@ export default function Performance() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center font-semibold text-primary">
-                            {intern.full_name.charAt(0)}
+                            {(intern.full_name || "I").charAt(0)}
                           </div>
                           <div>
                             <p className="font-medium text-foreground">{intern.full_name}</p>

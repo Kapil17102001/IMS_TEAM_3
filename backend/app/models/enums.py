@@ -7,3 +7,4 @@ class RoundName(Enum):
     HR = "hr"
     HIRED = "hired"
     REJECTED = "rejected"
+    ONBOARDED = "onboarded"

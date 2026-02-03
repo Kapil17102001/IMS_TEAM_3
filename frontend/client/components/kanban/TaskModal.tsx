@@ -42,7 +42,7 @@ export function TaskModal({
     description: "",
     assignedIntern: "",
     priority: "medium" as "LOW" | "MEDIUM" | "HIGH",
-    status: "todo" as "TODO"  | "IN_PROGRESS" | "DONE" ,
+    status: "todo" as "TODO" | "IN_PROGRESS" | "DONE",
     dueDate: "",
   });
 
@@ -95,10 +95,10 @@ export function TaskModal({
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/v1/tasks/tasks?user_id=1", {
+      const response = await axios.post("http://localhost:8000/api/v1/tasks/tasks", {
         title: formData.title,
         description: formData.description,
-        status: formData.status.toUpperCase(),
+        status: formData.status.toUpperCase().replace("_", "-"),
         position: 0, // Assuming position is 0 for new tasks
         due_date: formData.dueDate,
         priority: formData.priority,
@@ -254,7 +254,7 @@ export function TaskModal({
                 <SelectItem value="TODO">To Do</SelectItem>
                 <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
                 <SelectItem value="DONE">Done</SelectItem>
-                <SelectItem value ="REVIEW">Review</SelectItem>
+                <SelectItem value="REVIEW">Review</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -20,6 +20,7 @@ interface InternsContextType {
   interns: Intern[];
   loading: boolean;
   error: string | null;
+  refreshInterns: () => Promise<void>;
 }
 
 const InternsContext = createContext<InternsContextType | undefined>(undefined);
@@ -29,31 +30,33 @@ export const InternsProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchInterns() {
-      try {
-        const response = await axios.get(
-          "http://localhost:8000/api/v1/interns/?skip=0&limit=100",
-          {
-            headers: {
-              accept: "application/json",
-            },
-          }
-        );
-        setInterns(response.data);
-      } catch (err) {
-        setError("Failed to fetch interns data");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+  const fetchInterns = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        "http://localhost:8000/api/v1/interns/?skip=0&limit=100",
+        {
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+      setInterns(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch interns data");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchInterns();
   }, []);
 
   return (
-    <InternsContext.Provider value={{ interns, loading, error }}>
+    <InternsContext.Provider value={{ interns, loading, error, refreshInterns: fetchInterns }}>
       {children}
     </InternsContext.Provider>
   );

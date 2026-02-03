@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime, time
 from app.models.candidate_interviews import InterviewStatus
 
 
@@ -9,6 +10,8 @@ class CandidateInterviewsBase(BaseModel):
     score: Optional[int] = None
     feedback: Optional[str] = None
     status: Optional[InterviewStatus] = None
+    interview_date: Optional[datetime] = None
+    interview_time: Optional[time] = None
 
 
 class CandidateInterviewsCreate(CandidateInterviewsBase):

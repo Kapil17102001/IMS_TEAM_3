@@ -13,15 +13,10 @@ export interface DemoResponse {
 
 
 /**
- * Shared code between client and server
- * Useful to share types between client and server
- * and/or small pure JS functions that can be used on both client and server
- */
-
-/**
  * Candidate status enum - represents the hiring pipeline stages
  */
 export enum CandidateStatus {
+  PENDING = "pending",
   ASSESSMENT = "assessment",
   INTERVIEW1 = "interview1",
   INTERVIEW2 = "interview2",
@@ -87,7 +82,9 @@ export const StatusColorMap: Record<CandidateStatus, string> = {
  * Get human-readable status label
  */
 export function getStatusLabel(status: CandidateStatus): string {
+  if (!status) return "Unknown";
   const labels: Record<CandidateStatus, string> = {
+    [CandidateStatus.PENDING]: "Pending Review",
     [CandidateStatus.ASSESSMENT]: "Assessment",
     [CandidateStatus.INTERVIEW1]: "Interview Round 1",
     [CandidateStatus.INTERVIEW2]: "Interview Round 2",
@@ -95,7 +92,7 @@ export function getStatusLabel(status: CandidateStatus): string {
     [CandidateStatus.HIRED]: "Hired",
     [CandidateStatus.REJECTED]: "Rejected",
   };
-  return labels[status];
+  return labels[status] || status;
 }
 
 /**
@@ -105,7 +102,10 @@ export function getAllowedNextStatuses(
   currentStatus: CandidateStatus
 ): CandidateStatus[] {
   const transitions: Record<CandidateStatus, CandidateStatus[]> = {
-   
+    [CandidateStatus.PENDING]: [
+      CandidateStatus.ASSESSMENT,
+      CandidateStatus.REJECTED,
+    ],
     [CandidateStatus.ASSESSMENT]: [
       CandidateStatus.INTERVIEW1,
       CandidateStatus.REJECTED,
@@ -131,11 +131,3 @@ export function isValidStatusTransition(
 ): boolean {
   return getAllowedNextStatuses(from).includes(to);
 }
-
-/**
- * Example response type for /api/demo
- */
-export interface DemoResponse {
-  message: string;
-}
-

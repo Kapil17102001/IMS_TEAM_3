@@ -12,8 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { AlertCircle, CheckCircle } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useInterns } from "../context/InternsContext";
 
 const DEPARTMENTS = ["COE", "Engineering", "Design", "Analytics", "Quality Assurance", "Product"];
 const ROLES = [
@@ -70,6 +71,7 @@ export default function Onboarding() {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>("none");
+  const { interns, refreshInterns } = useInterns();
 
   // Fetch hired candidates on component mount
   useEffect(() => {
@@ -87,27 +89,31 @@ export default function Onboarding() {
         }
 
         const data: Candidate[] = await response.json();
-        // Filter only hired candidates
-        const hiredCandidates = data.filter(candidate => candidate.status === "hired");
+        // Filter only hired candidates AND exclude those already in interns list as a safety fallback
+        const hiredCandidates = data.filter(candidate => {
+          const isHired = candidate.status?.toLowerCase() === "hired";
+          const alreadyOnboarded = interns.some(i => i.email.toLowerCase() === candidate.email.toLowerCase());
+          return isHired && !alreadyOnboarded;
+        });
         setCandidates(hiredCandidates);
       } catch (error) {
         console.error("Error fetching candidates:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch hired candidates",
-          variant: "destructive",
-        });
+        // toast({
+        //   title: "Error",
+        //   description: "Failed to fetch hired candidates",
+        //   variant: "destructive",
+        // });
       } finally {
         setCandidatesLoading(false);
       }
     };
 
     fetchHiredCandidates();
-  }, [toast]);
+  }, [toast, interns]);
 
   const handleCandidateSelect = (candidateId: string) => {
     setSelectedCandidateId(candidateId);
-    
+
     if (candidateId === "none") {
       // Reset form if "None" is selected
       return;
@@ -198,11 +204,12 @@ export default function Onboarding() {
         department: formData.department,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        status: "active", // Hidden field, always set to onboarding
+        status: "active",
         address: formData.address,
         job_position: formData.job_position,
-        salary: "25,000", // Hidden field, default value
+        salary: "25,000",
         gender: formData.gender,
+        candidate_id: selectedCandidateId !== "none" ? parseInt(selectedCandidateId) : null,
       };
 
       const response = await fetch("http://localhost:8000/api/v1/interns/", {
@@ -219,8 +226,8 @@ export default function Onboarding() {
         throw new Error(errorData.detail || "Failed to onboard intern");
       }
 
-      const result = await response.json();
-      
+      await response.json();
+
       setIsLoading(false);
       setSubmitState({
         type: "success",
@@ -232,6 +239,8 @@ export default function Onboarding() {
         description: `${formData.full_name} has been onboarded successfully`,
         variant: "success"
       });
+
+      refreshInterns();
 
       // Reset form
       setTimeout(() => {
@@ -268,7 +277,7 @@ export default function Onboarding() {
 
   return (
     <MainLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground mb-2">Onboard an Intern</h1>
           <p className="text-muted-foreground">
@@ -277,7 +286,7 @@ export default function Onboarding() {
         </div>
 
         <Card className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
             {/* Candidate Selector */}
             <div className="pb-6 border-b">
               <Label htmlFor="candidate_selector" className="text-sm font-medium">
@@ -286,17 +295,17 @@ export default function Onboarding() {
               <p className="text-xs text-muted-foreground mt-1 mb-2">
                 Choose a hired candidate to autofill the form
               </p>
-              <Select 
-                value={selectedCandidateId} 
+              <Select
+                value={selectedCandidateId}
                 onValueChange={handleCandidateSelect}
                 disabled={candidatesLoading}
               >
                 <SelectTrigger id="candidate_selector" className="mt-2">
                   <SelectValue placeholder={
-                    candidatesLoading 
-                      ? "Loading candidates..." 
-                      : candidates.length === 0 
-                        ? "No hired candidates available" 
+                    candidatesLoading
+                      ? "Loading candidates..."
+                      : candidates.length === 0
+                        ? "No hired candidates available"
                         : "Select a candidate"
                   } />
                 </SelectTrigger>
@@ -315,10 +324,10 @@ export default function Onboarding() {
 
             {/* Status Messages */}
             {submitState.type === "success" && (
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-success/10 border border-success/20">
-                <CheckCircle className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-success">{submitState.message}</p>
+                  <p className="font-semibold text-green-500">{submitState.message}</p>
                 </div>
               </div>
             )}
@@ -332,62 +341,59 @@ export default function Onboarding() {
               </div>
             )}
 
-            {/* Full Name */}
-            <div>
-              <Label htmlFor="full_name" className="text-sm font-medium">
-                Full Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="full_name"
-                name="full_name"
-                type="text"
-                placeholder="Your Name Here"
-                value={formData.full_name}
-                onChange={handleInputChange}
-                className="mt-2"
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Full Name */}
+              <div className="space-y-2">
+                <Label htmlFor="full_name" className="text-sm font-medium">
+                  Full Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="full_name"
+                  name="full_name"
+                  type="text"
+                  placeholder="Your Name Here"
+                  value={formData.full_name}
+                  onChange={handleInputChange}
+                />
+              </div>
 
-            {/* Email */}
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="example@example.com"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="mt-2"
-              />
-            </div>
+              {/* Email */}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="example@example.com"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                />
+              </div>
 
-            {/* University */}
-            <div>
-              <Label htmlFor="university" className="text-sm font-medium">
-                University <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="university"
-                name="university"
-                type="text"
-                placeholder="university Here"
-                value={formData.university}
-                onChange={handleInputChange}
-                className="mt-2"
-              />
-            </div>
+              {/* University */}
+              <div className="space-y-2">
+                <Label htmlFor="university" className="text-sm font-medium">
+                  University <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="university"
+                  name="university"
+                  type="text"
+                  placeholder="University Here"
+                  value={formData.university}
+                  onChange={handleInputChange}
+                />
+              </div>
 
-            {/* Job Position and Department */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              {/* Job Position */}
+              <div className="space-y-2">
                 <Label htmlFor="job_position" className="text-sm font-medium">
                   Job Position <span className="text-destructive">*</span>
                 </Label>
                 <Select value={formData.job_position} onValueChange={(value) => handleSelectChange("job_position", value)}>
-                  <SelectTrigger id="job_position" className="mt-2">
+                  <SelectTrigger id="job_position">
                     <SelectValue placeholder="Select a position" />
                   </SelectTrigger>
                   <SelectContent>
@@ -400,7 +406,8 @@ export default function Onboarding() {
                 </Select>
               </div>
 
-              <div>
+              {/* Department */}
+              <div className="space-y-2">
                 <Label htmlFor="department" className="text-sm font-medium">
                   Department <span className="text-destructive">*</span>
                 </Label>
@@ -408,7 +415,7 @@ export default function Onboarding() {
                   value={formData.department}
                   onValueChange={(value) => handleSelectChange("department", value)}
                 >
-                  <SelectTrigger id="department" className="mt-2">
+                  <SelectTrigger id="department">
                     <SelectValue placeholder="Select a department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -420,11 +427,28 @@ export default function Onboarding() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Start and End Date */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
+              {/* Gender */}
+              <div className="space-y-2">
+                <Label htmlFor="gender" className="text-sm font-medium">
+                  Gender <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(value) => handleSelectChange("gender", value)}
+                >
+                  <SelectTrigger id="gender">
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Start Date */}
+              <div className="space-y-2">
                 <Label htmlFor="start_date" className="text-sm font-medium">
                   Start Date <span className="text-destructive">*</span>
                 </Label>
@@ -434,11 +458,11 @@ export default function Onboarding() {
                   type="date"
                   value={formData.start_date}
                   onChange={handleInputChange}
-                  className="mt-2"
                 />
               </div>
 
-              <div>
+              {/* End Date */}
+              <div className="space-y-2">
                 <Label htmlFor="end_date" className="text-sm font-medium">
                   End Date <span className="text-destructive">*</span>
                 </Label>
@@ -448,13 +472,12 @@ export default function Onboarding() {
                   type="date"
                   value={formData.end_date}
                   onChange={handleInputChange}
-                  className="mt-2"
                 />
               </div>
             </div>
 
             {/* Address */}
-            <div>
+            <div className="space-y-2">
               <Label htmlFor="address" className="text-sm font-medium">
                 Address <span className="text-destructive">*</span>
               </Label>
@@ -464,38 +487,26 @@ export default function Onboarding() {
                 placeholder="Address Here"
                 value={formData.address}
                 onChange={handleTextareaChange}
-                className="mt-2 min-h-[80px]"
+                className="min-h-[100px]"
               />
             </div>
 
-            {/* Gender */}
-            <div>
-              <Label htmlFor="gender" className="text-sm font-medium">
-                Gender <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={formData.gender}
-                onValueChange={(value) => handleSelectChange("gender", value)}
-              >
-                <SelectTrigger id="gender" className="mt-2">
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Submit Button */}
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full font-semibold"
-              size="lg"
-            >
-              {isLoading ? "Onboarding..." : "Onboard Intern"}
-            </Button>
+            <div className="flex justify-end pt-4">
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full md:w-64"
+                size="lg"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Onboarding...
+                  </>
+                ) : "Onboard Intern"}
+              </Button>
+            </div>
           </form>
         </Card>
       </div>

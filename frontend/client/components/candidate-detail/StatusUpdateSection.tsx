@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -27,7 +28,7 @@ import {
   getStatusLabel,
   StatusColorMap,
 } from "@shared/api";
-import { AlertCircle, CheckCircle, Loader2, Star } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Star, Calendar } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
 interface StatusUpdateSectionProps {
@@ -82,6 +83,8 @@ export default function StatusUpdateSection({
   const [hoverRating, setHoverRating] = useState(0);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+
+
 
   const allowedStatuses = getAllowedNextStatuses(candidate.status);
   const isRejectedOrHired =
@@ -173,6 +176,8 @@ export default function StatusUpdateSection({
     }
   };
 
+
+
   const getWarningMessage = () => {
     if (selectedStatus === CandidateStatus.REJECTED) {
       return "This action will mark the candidate as rejected. They will not be able to progress further in the pipeline.";
@@ -201,16 +206,15 @@ export default function StatusUpdateSection({
           <p className={`text-xs ${textColor} font-medium mb-2`}>CURRENT STATUS</p>
           <div className="flex items-center gap-2">
             <span
-              className={`inline-block h-3 w-3 rounded-full ${
-                {
-                  pending: "bg-status-pending",
-                  assessment: "bg-status-assessment",
-                  interview: "bg-status-interview",
-                  hr: "bg-status-hr",
-                  hired: "bg-status-hired",
-                  rejected: "bg-status-rejected",
-                }[currentColorKey]
-              }`}
+              className={`inline-block h-3 w-3 rounded-full ${{
+                pending: "bg-status-pending",
+                assessment: "bg-status-assessment",
+                interview: "bg-status-interview",
+                hr: "bg-status-hr",
+                hired: "bg-status-hired",
+                rejected: "bg-status-rejected",
+              }[currentColorKey]
+                }`}
             ></span>
             <span className={`font-semibold ${textColor}`}>
               {getStatusLabel(candidate.status)}
@@ -269,11 +273,10 @@ export default function StatusUpdateSection({
                     aria-label={`Rate ${star} stars`}
                   >
                     <Star
-                      className={`h-8 w-8 transition-colors ${
-                        star <= (hoverRating || rating)
-                          ? "fill-amber-400 text-amber-400"
-                          : "text-gray-300"
-                      }`}
+                      className={`h-8 w-8 transition-colors ${star <= (hoverRating || rating)
+                        ? "fill-amber-400 text-amber-400"
+                        : "text-gray-300"
+                        }`}
                     />
                   </button>
                 ))}
@@ -318,6 +321,8 @@ export default function StatusUpdateSection({
             </p>
           )}
         </div>
+
+
 
         {/* Update Button */}
         <Button
@@ -367,11 +372,10 @@ export default function StatusUpdateSection({
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Star
                     key={star}
-                    className={`h-5 w-5 ${
-                      star <= rating
-                        ? "fill-amber-400 text-amber-400"
-                        : "text-gray-300"
-                    }`}
+                    className={`h-5 w-5 ${star <= rating
+                      ? "fill-amber-400 text-amber-400"
+                      : "text-gray-300"
+                      }`}
                   />
                 ))}
                 <span className="text-sm font-semibold text-indigo-900 ml-2">

@@ -37,6 +37,16 @@ async def create_intern(
         )
     created_intern =  intern_service.create_intern(db=db, intern_in=intern_in)
 
+    # If linked to a candidate, update candidate status to ONBOARDED
+    if intern_in.candidate_id:
+        from app.models.candidate import Candidate
+        from app.models.enums import RoundName
+        candidate = db.query(Candidate).filter(Candidate.id == intern_in.candidate_id).first()
+        if candidate:
+            candidate.status = RoundName.ONBOARDED
+            db.add(candidate)
+            db.commit()
+
     intern_data = {
          "full_name": created_intern.full_name,
          "email":intern_in.email,

@@ -105,7 +105,7 @@ export default function Candidates() {
   };
 
   const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
+    const statusLower = status?.toLowerCase() || "";
     switch (statusLower) {
       case "assessment":
         return <Badge className="bg-blue-500 text-white">Assessment</Badge>;
@@ -126,11 +126,11 @@ export default function Candidates() {
 
   const filteredCandidates = candidates.filter((candidate) => {
     const matchesSearch =
-      candidate.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      candidate.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (candidate.full_name?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (candidate.email?.toLowerCase() || "").includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "all" || candidate.status.toLowerCase() === statusFilter;
+      statusFilter === "all" || candidate.status?.toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -172,9 +172,9 @@ export default function Candidates() {
             >
               All Candidates ({candidates.length})
             </Button>
-            {[ "assessment", "interview1", "interview2", "hr", "hired", "rejected"].map((status) => {
+            {["assessment", "interview1", "interview2", "hr", "hired", "rejected"].map((status) => {
               const count = candidates.filter(
-                (c) => c.status.toLowerCase() === status
+                (c) => c.status?.toLowerCase() === status
               ).length;
               return (
                 <Button
