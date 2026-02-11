@@ -12,7 +12,9 @@ import {
   Trophy,
   ArrowRight,
   User,
-  CheckSquare
+  CheckSquare,
+  Medal,
+  Award
 } from "lucide-react";
 import { useInterns } from "../context/InternsContext";
 
@@ -41,17 +43,31 @@ export default function Index() {
   const [tasksInProgress, setTasksInProgress] = useState(0);
   const [completedTasks, setCompletedTasks] = useState(0);
   const [pendingOnboarding, setPendingOnboarding] = useState(0);
+  const [internTasks, setInternTasks] = useState<Record<number, any[]>>({});
 
   useEffect(() => {
     async function fetchPortalStats() {
       try {
-        // Task stats
+        // Task stats - Fetch ALL tasks once
         const taskResponse = await axios.get("http://localhost:8000/api/v1/tasks/tasks", {
           headers: { accept: "application/json" }
         });
         const tasks = taskResponse.data;
         setTasksInProgress(tasks.filter((t: any) => t.status?.toLowerCase() === "in-progress").length);
         setCompletedTasks(tasks.filter((t: any) => t.status?.toLowerCase() === "done").length);
+
+        // Optimize: Group tasks by intern for leaderboard (avoiding N+1 API calls)
+        const tasksByIntern: Record<number, any[]> = {};
+        tasks.forEach((task: any) => {
+          if (task.assignedIntern) {
+            const iId = parseInt(task.assignedIntern);
+            if (!isNaN(iId)) {
+              if (!tasksByIntern[iId]) tasksByIntern[iId] = [];
+              tasksByIntern[iId].push(task);
+            }
+          }
+        });
+        setInternTasks(tasksByIntern);
 
         // Pending Onboarding stats
         const hiredResponse = await axios.get("http://localhost:8000/api/v1/candidate/status/HIRED?skip=0&limit=100", {
@@ -66,6 +82,24 @@ export default function Index() {
     refreshInterns();
     fetchPortalStats();
   }, [interns.length]);
+
+  const calculatePerformanceScore = (internId: number) => {
+    const tasks = internTasks[internId] || [];
+    const scoredTasks = tasks.filter((task) => typeof task.score === 'number');
+
+    if (scoredTasks.length === 0) return 0;
+
+    const totalScore = scoredTasks.reduce((sum, task) => sum + task.score, 0);
+    return Math.round(totalScore / scoredTasks.length);
+  };
+
+  const rankedInterns = interns
+    .map((intern) => ({
+      ...intern,
+      score: calculatePerformanceScore(intern.id),
+      tasksCompleted: (internTasks[intern.id] || []).filter((t) => t.status?.toLowerCase() === "done").length,
+    }))
+    .sort((a, b) => b.score - a.score);
 
   if (loading) {
     return (
@@ -129,45 +163,46 @@ export default function Index() {
         {/* Action & Info Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          {/* Quick Actions (styled like 'Recruitment Funnel' card for consistency) */}
+          {/* Leaderboard Preview */}
           <div className="bg-card border border-border p-6 rounded-2xl">
-            <h2 className="text-xl font-bold text-foreground mb-6">Quick Actions</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <Link to="/onboarding">
-                <div className="p-4 bg-accent/5 rounded-xl hover:bg-accent/10 transition-colors border border-border flex flex-col items-center justify-center text-center gap-2 group cursor-pointer h-full">
-                  <div className="p-2 bg-blue-500/10 rounded-lg group-hover:bg-blue-500/20 transition-colors">
-                    <Users className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">Onboarding</span>
-                </div>
-              </Link>
+            <h2 className="text-xl font-bold text-foreground mb-6 flex items-center justify-between">
+              <span>Leaderboard</span>
+              <Link to="/leaderboard" className="text-xs text-blue-400 hover:text-blue-300">View Full</Link>
+            </h2>
 
-              <Link to="/performance">
-                <div className="p-4 bg-accent/5 rounded-xl hover:bg-accent/10 transition-colors border border-border flex flex-col items-center justify-center text-center gap-2 group cursor-pointer h-full">
-                  <div className="p-2 bg-green-500/10 rounded-lg group-hover:bg-green-500/20 transition-colors">
-                    <BarChart3 className="w-6 h-6 text-green-400" />
+            <div className="space-y-4">
+              {rankedInterns.slice(0, 3).map((intern, index) => (
+                <div key={intern.id} className="bg-accent/5 border border-border p-4 rounded-xl flex items-center gap-4 hover:bg-accent/10 transition-colors">
+                  <div className={`
+                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg
+                    ${index === 0 ? "bg-yellow-100 text-yellow-600 ring-2 ring-yellow-500/20" :
+                      index === 1 ? "bg-gray-100 text-gray-500 ring-2 ring-gray-500/20" :
+                        index === 2 ? "bg-amber-100 text-amber-600 ring-2 ring-amber-500/20" :
+                          "bg-muted text-muted-foreground"}
+                  `}>
+                    {index === 0 ? <Trophy className="w-5 h-5" /> :
+                      index === 1 ? <Medal className="w-5 h-5" /> :
+                        index === 2 ? <Award className="w-5 h-5" /> :
+                          index + 1}
                   </div>
-                  <span className="text-sm font-medium text-muted-foreground">Performance</span>
+                  <div>
+                    <h4 className="text-foreground font-bold text-sm">{intern.full_name}</h4>
+                    <p className="text-muted-foreground text-xs">{intern.job_position}</p>
+                  </div>
+                  <div className="ml-auto flex flex-col items-end">
+                    <span className={`text-lg font-bold ${intern.score >= 80 ? "text-green-500" :
+                      intern.score >= 70 ? "text-yellow-500" : "text-red-500"
+                      }`}>
+                      {intern.score}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">/ 100</span>
+                  </div>
                 </div>
-              </Link>
+              ))}
 
-              <Link to="/planner">
-                <div className="p-4 bg-accent/5 rounded-xl hover:bg-accent/10 transition-colors border border-border flex flex-col items-center justify-center text-center gap-2 group cursor-pointer h-full">
-                  <div className="p-2 bg-yellow-500/10 rounded-lg group-hover:bg-yellow-500/20 transition-colors">
-                    <CheckSquare className="w-6 h-6 text-yellow-400" />
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">Planner</span>
-                </div>
-              </Link>
-
-              <Link to="/interns">
-                <div className="p-4 bg-accent/5 rounded-xl hover:bg-accent/10 transition-colors border border-border flex flex-col items-center justify-center text-center gap-2 group cursor-pointer h-full">
-                  <div className="p-2 bg-purple-500/10 rounded-lg group-hover:bg-purple-500/20 transition-colors">
-                    <Users className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <span className="text-sm font-medium text-muted-foreground">Intern Views</span>
-                </div>
-              </Link>
+              {rankedInterns.length === 0 && (
+                <div className="text-gray-500 text-sm italic py-4 text-center">No performance data available.</div>
+              )}
             </div>
           </div>
 

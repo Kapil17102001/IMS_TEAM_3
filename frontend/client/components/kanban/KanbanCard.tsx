@@ -18,6 +18,7 @@ interface KanbanCardProps {
   task: Task;
   onEdit: () => void;
   onDelete: () => void;
+  onApprove: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
   isDragging: boolean;
@@ -27,6 +28,7 @@ export function KanbanCard({
   task,
   onEdit,
   onDelete,
+  onApprove,
   onDragStart,
   onDragEnd,
   isDragging,
@@ -64,52 +66,13 @@ export function KanbanCard({
 
   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date();
 
-  const handleApprove = async () => {
-    try {
-      // Update the task status in the backend
-      await axios.put(
-        `http://localhost:8000/api/v1/tasks/tasks/${task.id}/status`,
-        null,
-        {
-          params: { status: "DONE" },
-          headers: {
-            accept: "application/json",
-          },
-        }
-      );
-
-      // Show success toast
-      toast({
-        title: "Task Approved",
-        description: `Task ${task.title} has been approved successfully!`,
-        variant: "success",
-      });
-
-      // Update the task status locally
-      task.status = "done";
-
-      // Trigger re-render of the parent page
-      onDragEnd();
-    } catch (error) {
-      console.error("Error approving task:", error);
-
-      // Show error toast
-      toast({
-        title: "Error",
-        description: "Failed to approve the task. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <Card
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className={`p-4 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md ${
-        isDragging ? "opacity-50 ring-2 ring-primary" : "hover:shadow-lg"
-      }`}
+      className={`p-4 cursor-grab active:cursor-grabbing transition-all duration-200 hover:shadow-md ${isDragging ? "opacity-50 ring-2 ring-primary" : "hover:shadow-lg"
+        }`}
     >
       {/* Title */}
       <h4 className="font-semibold text-foreground text-sm mb-3 line-clamp-2">
@@ -160,7 +123,7 @@ export function KanbanCard({
       {/* Approve Button */}
       {user.role === "admin" && task.status === "review" && (
         <Button
-          onClick={handleApprove}
+          onClick={onApprove}
           className="w-full bg-green-600 hover:bg-green-700 text-white mb-4"
         >
           Approve

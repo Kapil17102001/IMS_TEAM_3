@@ -23,6 +23,8 @@ export interface Task {
   dueDate?: string;
   createdAt: string;
   updatedAt: string;
+  score?: number;
+  feedback?: string;
 }
 
 export interface PerformanceRecord {

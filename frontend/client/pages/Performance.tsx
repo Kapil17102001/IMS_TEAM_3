@@ -14,6 +14,7 @@ import {
 import { Search, TrendingUp, TrendingDown } from "lucide-react";
 import { useInterns } from "../context/InternsContext";
 import axios from "axios";
+import { InternTasksModal } from "../components/performance/InternTasksModal";
 
 export default function Performance() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -22,6 +23,7 @@ export default function Performance() {
   const { interns, loading, error, refreshInterns } = useInterns();
   const [internTasks, setInternTasks] = useState<Record<number, any[]>>({});
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [selectedIntern, setSelectedIntern] = useState<any | null>(null);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -55,11 +57,13 @@ export default function Performance() {
 
   const calculatePerformanceScore = (internId: number) => {
     const tasks = internTasks[internId] || [];
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(
-      (task) => task.status?.toLowerCase() === "done"
-    ).length;
-    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+    // Filter tasks that have a valid numeric score
+    const scoredTasks = tasks.filter((task) => typeof task.score === 'number');
+
+    if (scoredTasks.length === 0) return 0;
+
+    const totalScore = scoredTasks.reduce((sum, task) => sum + task.score, 0);
+    return Math.round(totalScore / scoredTasks.length);
   };
 
   const enhancedInterns = interns.map((intern) => ({
@@ -242,7 +246,8 @@ export default function Performance() {
                   filteredInterns.map((intern) => (
                     <tr
                       key={intern.id}
-                      className="hover:bg-muted/50 transition-colors duration-150"
+                      className="hover:bg-muted/50 transition-colors duration-150 cursor-pointer"
+                      onClick={() => setSelectedIntern(intern)}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -283,6 +288,13 @@ export default function Performance() {
           </div>
         </Card>
       </div>
+
+      <InternTasksModal
+        isOpen={!!selectedIntern}
+        onClose={() => setSelectedIntern(null)}
+        internName={selectedIntern?.full_name || ""}
+        tasks={selectedIntern ? internTasks[selectedIntern.id] || [] : []}
+      />
     </MainLayout>
   );
 }

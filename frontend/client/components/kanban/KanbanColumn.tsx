@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   onAddTask: () => void;
   onEditTask: (task: Task) => void;
   onDeleteTask: (taskId: string) => void;
+  onApproveTask: (task: Task) => void;
   onDragStart: (task: Task) => void;
   onDragEnd: () => void;
   onDrop: () => void;
@@ -19,6 +20,7 @@ export function KanbanColumn({
   tasks,
   onEditTask,
   onDeleteTask,
+  onApproveTask,
   onDragStart,
   onDragEnd,
   onDrop,
@@ -40,9 +42,8 @@ export function KanbanColumn({
     <div
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`flex flex-col bg-muted/30 rounded-lg p-4 border-2 transition-all duration-200 ${
-        isDropping ? "border-primary bg-primary/5" : "border-border"
-      }`}
+      className={`flex flex-col bg-muted/30 rounded-lg p-4 border-2 transition-all duration-200 ${isDropping ? "border-primary bg-primary/5" : "border-border"
+        }`}
     >
       {/* Column Header */}
       <div className="flex items-center justify-between mb-4">
@@ -69,6 +70,7 @@ export function KanbanColumn({
               task={task}
               onEdit={() => onEditTask(task)}
               onDelete={() => onDeleteTask(task.id)}
+              onApprove={() => onApproveTask(task)}
               onDragStart={() => onDragStart(task)}
               onDragEnd={onDragEnd}
               isDragging={draggedTask?.id === task.id}
