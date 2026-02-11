@@ -25,7 +25,12 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-# Mount static files for resume PDFs
+# Mount static files for resume PDFs and intern documents
+app.mount(
+    "/documents",
+    StaticFiles(directory="documents"),
+    name="documents"
+)
 app.mount(
     "/resumes",
     StaticFiles(directory="documents/resume"),

@@ -8,3 +8,15 @@ class RoundName(Enum):
     HIRED = "hired"
     REJECTED = "rejected"
     ONBOARDED = "onboarded"
+
+class FileUploadStatus(Enum):
+    VERIFIED = "verified"
+    PENDING = "pending"
+    REJECTED = "rejected"
+    
+class FileType(Enum):
+    AADHAR = "aadhaar"
+    PAN_CARD = "pan_card"
+    MATRICULATION_CERTIFICATE = "marticulation_certificate"  
+    INTERMEDIATE_CERTIFICATE = "intermediate_certificate"  
+    DEGREE_CERTIFICATE = "degree_certificate"

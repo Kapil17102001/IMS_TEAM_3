@@ -3,6 +3,7 @@ import enum
 from app.db.base_class import Base
 
 class InternStatus(str, enum.Enum):
+    PENDING = "pending"
     ONBOARDING = "onboarding"
     ACTIVE = "active"
     COMPLETED = "completed"
