@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useUser } from '../../context/UserContext';
 
 interface Candidate {
     id: number;
@@ -18,6 +19,7 @@ interface OfferLetterUploadProps {
 }
 
 const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClose, onSuccess }) => {
+    const { user } = useUser();
     console.log("Candidate from upload conmponent : ", candidate)
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
@@ -60,8 +62,9 @@ const OfferLetterUpload: React.FC<OfferLetterUploadProps> = ({ candidate, onClos
                 formData.append('files', file);
             });
 
-            formData.append('candidateId', candidate.id.toString());
+            formData.append('userId', "4");
             formData.append('candidateName', candidate.full_name);
+            formData.append('fileType',"AADHAR");
             formData.append('email', candidate.email);
             formData.append('university', candidate.university);
             formData.append('address', candidate.address);

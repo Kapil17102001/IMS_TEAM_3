@@ -3,11 +3,18 @@ import { MainLayout } from "../components/layout/MainLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Loader2, User, Mail, GraduationCap, Building2, Calendar, DollarSign, MapPin, CheckCircle2, XCircle, Eye, FileText, ExternalLink, MessageSquare, IndianRupee } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import ResumeViewer from "../components/candidate-detail/ResumeViewer";
 
 interface Intern {
   id: number;
@@ -34,6 +41,67 @@ export default function Interns() {
   const [statusFilter, setStatusFilter] = useState<string | "all">("all");
 
   const [pendingCount, setPendingCount] = useState(0);
+
+  // Modal State
+  const [selectedIntern, setSelectedIntern] = useState<Intern | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [internFiles, setInternFiles] = useState<any[]>([]);
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [isUpdatingFile, setIsUpdatingFile] = useState<number | null>(null);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [rejectingFileId, setRejectingFileId] = useState<number | null>(null);
+  const [rejectionFeedback, setRejectionFeedback] = useState("");
+
+  const fetchInternFiles = async (internId: number) => {
+    setIsLoadingFiles(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/intern/${internId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setInternFiles(data);
+      }
+    } catch (error) {
+      console.error("Error fetching files:", error);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
+  const handleRowClick = (intern: Intern) => {
+    setSelectedIntern(intern);
+    setIsModalOpen(true);
+    fetchInternFiles(intern.id);
+  };
+
+  const handleUpdateFileStatus = async (fileId: number, status: string, feedback?: string) => {
+    setIsUpdatingFile(fileId);
+    try {
+      const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/${fileId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status, feedback: feedback || "" }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Status Updated",
+          description: `Document marked as ${status}`,
+        });
+        setRejectingFileId(null);
+        setRejectionFeedback("");
+        if (selectedIntern) fetchInternFiles(selectedIntern.id);
+        fetchInterns();
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update status",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingFile(null);
+    }
+  };
 
   const fetchInterns = async () => {
     setIsLoading(true);
@@ -129,8 +197,8 @@ export default function Interns() {
         return <Badge className="bg-blue-500 text-white">Onboarding</Badge>;
       case "completed":
         return <Badge className="bg-gray-500 text-white">Completed</Badge>;
-      case "terminated":
-        return <Badge className="bg-red-500 text-white">Terminated</Badge>;
+      case "pending":
+        return <Badge className="bg-red-500 text-white">Pending</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -287,7 +355,8 @@ export default function Interns() {
                       filteredInterns.map((intern) => (
                         <tr
                           key={intern.id}
-                          className="hover:bg-muted/50 transition-colors duration-150"
+                          className="hover:bg-muted/50 transition-colors duration-150 cursor-pointer"
+                          onClick={() => handleRowClick(intern)}
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
@@ -312,7 +381,10 @@ export default function Interns() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleUpdate(intern.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleUpdate(intern.id);
+                                }}
                                 className="h-8 w-8 p-0"
                               >
                                 <Pencil className="h-4 w-4" />
@@ -320,7 +392,10 @@ export default function Interns() {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => handleDelete(intern.id, intern.full_name)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(intern.id, intern.full_name);
+                                }}
                                 className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -345,6 +420,247 @@ export default function Interns() {
             </>
           )}
         </Card>
+
+        {/* Intern Details Modal */}
+        <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <DialogContent className="max-w-5xl h-[90vh] flex flex-col p-0 overflow-hidden">
+            <DialogHeader className="p-6 pb-0">
+              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                <User className="text-primary" />
+                Intern Profile
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto p-6 space-y-8">
+              {selectedIntern && (
+                <>
+                  {/* Header Section */}
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-muted/30 p-6 rounded-3xl border border-border/50">
+                    <div className="flex items-center gap-5">
+                      <div className="w-20 h-20 rounded-3xl bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary shadow-inner">
+                        {selectedIntern.full_name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <h2 className="text-3xl font-extrabold tracking-tight">{selectedIntern.full_name}</h2>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Badge variant="secondary" className="font-semibold">
+                            {selectedIntern.job_position}
+                          </Badge>
+                          {getStatusBadge(selectedIntern.status)}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Contact Information</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-sm">
+                          <Mail className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{selectedIntern.email}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{selectedIntern.address || "No address provided"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Academic & Work</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-sm">
+                          <GraduationCap className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{selectedIntern.university}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                          <Building2 className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{selectedIntern.department}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                          <IndianRupee className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{selectedIntern.salary}/month</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">Duration</h3>
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-3 text-sm">
+                          <Calendar className="h-4 w-4 text-primary" />
+                          <span className="font-medium">
+                            {new Date(selectedIntern.start_date).toLocaleDateString()} - {new Date(selectedIntern.end_date).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Documents Section */}
+                  <div className="space-y-6 pt-4 border-t border-border">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xl font-bold flex items-center gap-2">
+                        <FileText className="text-primary" />
+                        Verification Documents
+                      </h3>
+                      <Badge variant="outline" className="font-bold">
+                        {internFiles.length}/5 Uploaded
+                      </Badge>
+                    </div>
+
+                    {isLoadingFiles ? (
+                      <div className="flex justify-center py-10">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      </div>
+                    ) : internFiles.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {internFiles.map((file) => (
+                          <Card key={file.id} className="p-4 flex flex-col gap-4 border-2 hover:border-primary/20 transition-all group">
+                            <div className="flex justify-between items-start">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-primary/5 rounded-xl group-hover:bg-primary/10 transition-colors">
+                                  <FileText className="h-6 w-6 text-primary" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm uppercase tracking-tight">
+                                    {file.file_type?.replace(/_/g, " ") || "Document"}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">
+                                    {file.file_name}
+                                  </p>
+                                </div>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={`font-bold text-[10px] uppercase tracking-widest ${file.status === 'verified' ? 'bg-green-500/10 text-green-600 border-green-500/20' :
+                                  file.status === 'rejected' ? 'bg-red-500/10 text-red-600 border-red-500/20' :
+                                    'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                                  }`}
+                              >
+                                {file.status}
+                              </Badge>
+                            </div>
+
+                            {file.feedback && rejectingFileId !== file.id && (
+                              <div className="text-xs bg-amber-500/5 p-2 rounded-lg border border-amber-500/10 text-amber-700 flex gap-2 italic">
+                                <MessageSquare className="h-3 w-3 shrink-0" />
+                                "{file.feedback}"
+                              </div>
+                            )}
+
+                            {rejectingFileId === file.id ? (
+                              <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <Input
+                                  placeholder="Reason for rejection..."
+                                  value={rejectionFeedback}
+                                  onChange={(e) => setRejectionFeedback(e.target.value)}
+                                  className="h-8 text-xs border-destructive/30 focus-visible:ring-destructive"
+                                  autoFocus
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="flex-1 h-7 text-[10px] font-bold"
+                                    onClick={() => handleUpdateFileStatus(file.id, 'rejected', rejectionFeedback)}
+                                    disabled={isUpdatingFile === file.id}
+                                  >
+                                    Confirm Reject
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-7 text-[10px] font-bold"
+                                    onClick={() => {
+                                      setRejectingFileId(null);
+                                      setRejectionFeedback("");
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2 mt-auto">
+                                <Button
+                                  size="sm"
+                                  className="flex-1 font-bold h-8"
+                                  onClick={() => setViewerUrl(`http://localhost:8000/documents/${file.file_name}`)}
+                                >
+                                  <Eye className="h-3 w-3 mr-2" />
+                                  View
+                                </Button>
+                                {file.status !== 'verified' && (
+                                  <>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="text-green-600 hover:text-green-700 font-bold h-8"
+                                      disabled={isUpdatingFile === file.id}
+                                      onClick={() => handleUpdateFileStatus(file.id, 'verified')}
+                                    >
+                                      {isUpdatingFile === file.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3 mr-2" />}
+                                      Verify
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="text-red-600 hover:text-red-700 font-bold h-8"
+                                      disabled={isUpdatingFile === file.id}
+                                      onClick={() => {
+                                        setRejectingFileId(file.id);
+                                        setRejectionFeedback(file.feedback || "");
+                                      }}
+                                    >
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </Card>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-10 bg-muted/20 rounded-3xl border border-dashed">
+                        <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+                        <p className="text-muted-foreground font-medium">No documents uploaded yet.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Viewer Portal */}
+                  {viewerUrl && (
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                      <div className="bg-background w-full max-w-4xl h-[85vh] rounded-3xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col">
+                        <div className="p-4 border-b flex justify-between items-center bg-muted/30">
+                          <h4 className="font-bold flex items-center gap-2">
+                            Preview Mode
+                          </h4>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => setViewerUrl(null)}
+                            className="rounded-full hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <XCircle className="h-6 w-6" />
+                          </Button>
+                        </div>
+                        <div className="flex-1">
+                          <ResumeViewer resumeUrl={viewerUrl} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MainLayout>
   );
