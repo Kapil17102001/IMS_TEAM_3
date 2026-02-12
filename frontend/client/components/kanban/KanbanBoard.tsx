@@ -3,9 +3,11 @@ import axios from "axios";
 import { Task } from "../../types";
 import { KanbanColumn } from "./KanbanColumn";
 import { TaskModal } from "./TaskModal";
+import { ApproveTaskModal } from "./ApproveTaskModal";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useUser } from "../../context/UserContext";
+import { useToast } from "@/hooks/use-toast";
 
 type TaskStatus = "todo" | "in-progress" | "review" | "done";
 
@@ -15,9 +17,12 @@ interface KanbanBoardProps {
 
 export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
   const { user } = useUser();
+  const { toast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [approvingTask, setApprovingTask] = useState<Task | null>(null);
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
 
   const columns: { id: TaskStatus; title: string }[] = [
@@ -42,6 +47,78 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     setIsModalOpen(true);
   };
 
+  const handleApproveTask = (task: Task) => {
+    setApprovingTask(task);
+    setIsApproveModalOpen(true);
+  };
+
+  const handleConfirmApprove = async (score: number, feedback: string) => {
+    if (!approvingTask) return;
+
+    try {
+      // 1. Update task assignment with score and feedback
+      // We need task_id and intern_id. 
+      // task.id is string "1", intern_id is task.assignedIntern (string)
+      // The API endpoint is PUT /task-assignments/{task_id}/{intern_id}
+
+      const internId = approvingTask.assignedIntern;
+
+      if (internId) {
+        await axios.put(
+          `http://localhost:8000/api/v1/task_assignment/task-assignments/${approvingTask.id}/${internId}`,
+          {
+            score: score,
+            feedback: feedback,
+          },
+          {
+            headers: {
+              accept: "application/json",
+              "Content-Type": "application/json",
+            },
+          }
+        );
+      } else {
+        console.warn("No intern assigned to task, skipping score update");
+      }
+
+      // 2. Update status to DONE
+      await axios.put(
+        `http://localhost:8000/api/v1/tasks/tasks/${approvingTask.id}/status`,
+        null,
+        {
+          params: { status: "DONE" },
+          headers: {
+            accept: "application/json",
+          },
+        }
+      );
+
+      // Update local state
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === approvingTask.id ? { ...task, status: "done" } : task
+        )
+      );
+
+      toast({
+        title: "Task Approved",
+        description: `Task approved with score ${score} and feedback saved.`,
+        variant: "success",
+      });
+
+    } catch (error) {
+      console.error("Error approving task:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve task.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsApproveModalOpen(false);
+      setApprovingTask(null);
+    }
+  };
+
   const handleSaveTask = (taskData: Omit<Task, "id" | "createdAt" | "updatedAt">) => {
     if (editingTask) {
       // Update existing task
@@ -49,10 +126,10 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
         prev.map((task) =>
           task.id === editingTask.id
             ? {
-                ...task,
-                ...taskData,
-                updatedAt: new Date().toISOString().split("T")[0],
-              }
+              ...task,
+              ...taskData,
+              updatedAt: new Date().toISOString().split("T")[0],
+            }
             : task
         )
       );
@@ -82,7 +159,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     setDraggedTask(null);
   };
 
-  
+
   const isColumnDraggable = (columnId: TaskStatus) => {
     if (user.role === "intern" && columnId === "done") {
       return false;
@@ -122,7 +199,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     const fetchTasks = async () => {
       try {
         let response;
-        
+
         // Use different API endpoint based on user role
         if (user?.role === "intern" && user?.id) {
           response = await axios.get(`http://localhost:8000/api/v1/tasks/tasks/intern/${user.id}?id_type=user`, {
@@ -173,7 +250,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
             Manage intern tasks and track progress
           </p>
         </div>
-       {user.role =="admin" && <Button onClick={handleAddTask} className="gap-2">
+        {user.role == "admin" && <Button onClick={handleAddTask} className="gap-2">
           <Plus className="w-4 h-4" />
           New Task
         </Button>}
@@ -205,7 +282,8 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
             onAddTask={handleAddTask}
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTask}
-             onDragStart={isColumnDraggable(column.id) ? handleDragStart : undefined}
+            onApproveTask={handleApproveTask}
+            onDragStart={isColumnDraggable(column.id) ? handleDragStart : undefined}
             onDragEnd={isColumnDraggable(column.id) ? handleDragEnd : undefined}
             onDrop={isColumnDraggable(column.id) ? () => handleDropOnColumn(column.id) : undefined}
             draggedTask={draggedTask}
@@ -224,6 +302,17 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
         }}
         onSave={handleSaveTask}
         onDelete={editingTask ? () => handleDeleteTask(editingTask.id) : undefined}
+      />
+
+      {/* Approve Task Modal */}
+      <ApproveTaskModal
+        isOpen={isApproveModalOpen}
+        task={approvingTask}
+        onClose={() => {
+          setIsApproveModalOpen(false);
+          setApprovingTask(null);
+        }}
+        onApprove={handleConfirmApprove}
       />
     </div>
   );

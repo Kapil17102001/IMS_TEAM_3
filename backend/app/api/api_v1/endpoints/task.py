@@ -58,12 +58,22 @@ def read_tasks(db: Session = Depends(get_db)):
     for task in tasks:
         # Fetch task assignments for the current task
         task_assignments = db.query(TaskAssignment).filter(TaskAssignment.task_id == task.task_id).all()
-        assigned_intern = str(task_assignments[0].intern_id) if task_assignments else None  # Get the first intern_id or None
+        assigned_intern = None
+        score = None
+        feedback = None
 
-        # Convert task to dictionary and add assignedInterns field
+        if task_assignments:
+            assignment = task_assignments[0]
+            assigned_intern = str(assignment.intern_id)
+            score = assignment.score
+            feedback = assignment.feedback
+
+        # Convert task to dictionary and add extra fields
         task_dict = task.__dict__.copy()
         task_dict.pop("_sa_instance_state", None)  # Remove SQLAlchemy internal state
-        task_dict["assignedIntern"] = assigned_intern  # Add assignedInterns field
+        task_dict["assignedIntern"] = assigned_intern  
+        task_dict["score"] = score
+        task_dict["feedback"] = feedback
 
         tasks_with_interns.append(task_dict)
 
@@ -135,6 +145,8 @@ def get_tasks_by_intern(id: int, id_type: str = "intern", db: Session = Depends(
             task_dict = task.__dict__.copy()
             task_dict.pop("_sa_instance_state", None)  # Remove SQLAlchemy internal state
             task_dict["assignedIntern"] = str(intern_id)
+            task_dict["score"] = task_assignment.score
+            task_dict["feedback"] = task_assignment.feedback
             tasks_with_details.append(task_dict)
 
     return tasks_with_details

@@ -36,6 +36,8 @@ class TaskInDBBase(TaskBase):
 
 class Task(TaskInDBBase):
     assignedIntern:Optional[str] = None
+    score: Optional[float] = None
+    feedback: Optional[str] = None
 
 class TaskInDB(TaskInDBBase):
     pass

@@ -6,6 +6,8 @@ class TaskAssignmentBase(BaseModel):
     task_id: int
     intern_id: int
     assigned_at: Optional[datetime] = None
+    score: Optional[float] = None
+    feedback: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -15,3 +17,5 @@ class TaskAssignmentCreate(TaskAssignmentBase):
 
 class TaskAssignmentUpdate(BaseModel):
     assigned_at: Optional[datetime] = None
+    score: Optional[float] = None
+    feedback: Optional[str] = None
