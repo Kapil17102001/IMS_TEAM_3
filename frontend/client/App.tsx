@@ -17,6 +17,7 @@ import CandidateDetail from "./pages/CandidateDetail";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
 import Performance from "./pages/Performance";
+import Leaderboard from "./pages/Leaderboard";
 import Interns from "./pages/Interns";
 import Planner from "./pages/Planner";
 import NotFound from "./pages/NotFound";
@@ -24,7 +25,9 @@ import Registration from "./pages/Registration";
 import Login from "./pages/Login";
 import ResumeUpload from "./pages/ResumeUpload";
 import CollegePortal from "./pages/CollegePortal";
+import InternTasks from "./pages/InternTasks";
 import InternDocuments from "./pages/InternDocuments";
+
 
 const queryClient = new QueryClient();
 
@@ -34,7 +37,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AdminRoutes = ({ lastPath }: { lastPath: string | null }) => {
-  const validPaths = ["/", "/onboarding", "/performance", "/interns", "/planner", "/college"];
+  const validPaths = ["/", "/onboarding", "/performance", "/interns", "/planner", "/leaderboard", "/college"];
   const defaultPath = lastPath && validPaths.includes(lastPath) ? lastPath : "/";
 
   return (
@@ -44,6 +47,7 @@ const AdminRoutes = ({ lastPath }: { lastPath: string | null }) => {
       <Route path="/performance" element={<Performance />} />
       <Route path="/interns" element={<Interns />} />
       <Route path="/planner" element={<Planner />} />
+      <Route path="/leaderboard" element={<Leaderboard />} />
       <Route path="/college" element={<College />} />
       <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
@@ -70,6 +74,7 @@ const InternRoutes = ({ lastPath }: { lastPath: string | null }) => {
   return (
     <Routes>
       <Route path="/planner" element={<Planner />} />
+      <Route path="/tasks" element={<InternTasks />} />
       <Route path="/documents" element={<InternDocuments />} />
       <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>

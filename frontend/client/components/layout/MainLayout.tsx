@@ -15,6 +15,8 @@ import {
   ChevronLeft,
   Settings,
   LogOut,
+  Trophy,
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,9 +37,10 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const allNavItems = [
     { label: "Onboarding", href: "/onboarding", icon: Users },
-    { label: "Performance", href: "/performance", icon: BarChart3 },
     { label: "Intern Views", href: "/interns", icon: BookOpen },
+    { label: "Performance", href: "/performance", icon: BarChart3 },
     { label: "Planner", href: "/planner", icon: CheckSquare },
+    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { label: "Colleges", href: "/college", icon: Users },
   ];
 
@@ -48,6 +51,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
   const internNavItems = [
     { label: "Planner", href: "/planner", icon: CheckSquare },
+    { label: "Tasks", href: "/tasks", icon: ClipboardList },
     { label: "Documents", href: "/documents", icon: BookOpen },
   ];
 
