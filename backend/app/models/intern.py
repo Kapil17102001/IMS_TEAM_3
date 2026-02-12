@@ -21,7 +21,7 @@ class Intern(Base):
     department = Column(String, index=True)
     start_date = Column(Date)
     end_date = Column(Date)
-    status = Column(Enum(InternStatus), default=InternStatus.ONBOARDING)
+    status = Column(Enum(InternStatus), default=InternStatus.PENDING)
     address = Column(String, index = True)
     job_position = Column(String,index = True)
     salary = Column(String,index = True,default = "25,000")

@@ -34,6 +34,7 @@ export default function College() {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CollegeData>({
     college_name: "",
     email: "",
@@ -43,8 +44,8 @@ export default function College() {
     head_phone: "",
   });
 
-  const fetchColleges = async () => {
-    setIsLoading(true);
+  const fetchColleges = async (silent = false) => {
+    if (!silent) setIsLoading(true);
     setError(null);
     try {
       const response = await fetch("http://localhost:8000/api/v1/colleges", {
@@ -82,6 +83,10 @@ export default function College() {
       return;
     }
 
+    const previousColleges = [...colleges];
+    // Optimistically update the UI
+    setColleges((prev) => prev.filter((c) => c.id !== id));
+
     try {
       const response = await fetch(
         `http://localhost:8000/api/v1/colleges/${id}`,
@@ -98,8 +103,10 @@ export default function College() {
         variant: "success",
       });
 
-      fetchColleges();
+      fetchColleges(true);
     } catch (err) {
+      // Revert on error
+      setColleges(previousColleges);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete college";
       toast({
@@ -120,11 +127,17 @@ export default function College() {
     }));
   };
 
+  const handleEdit = (college: CollegeData) => {
+    setFormData(college);
+    setEditingId(college.id || null);
+    setDialogOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
 
     try {
-      setIsLoading(true);
       const url = editingId
         ? `http://localhost:8000/api/v1/colleges/${editingId}`
         : "http://localhost:8000/api/v1/colleges";
@@ -141,12 +154,22 @@ export default function College() {
         throw new Error("Failed to save college");
       }
 
+      const savedCollege = await response.json();
+
       toast({
         title: "Success",
         description: editingId
           ? "College updated successfully!"
           : "College added successfully!",
         variant: "success",
+      });
+
+      // Optimistic update
+      setColleges((prev) => {
+        if (editingId) {
+          return prev.map((c) => (c.id === editingId ? savedCollege : c));
+        }
+        return [...prev, savedCollege];
       });
 
       setFormData({
@@ -160,7 +183,8 @@ export default function College() {
       setEditingId(null);
       setDialogOpen(false);
 
-      fetchColleges();
+      // Still fetch to ensure total sync, but doesn't block the UI
+      fetchColleges(true);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to save college";
@@ -170,7 +194,7 @@ export default function College() {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -270,8 +294,8 @@ export default function College() {
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Saving..." : editingId ? "Update College" : "Add College"}
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? "Saving..." : editingId ? "Update College" : "Add College"}
                   </Button>
                 </div>
               </form>
