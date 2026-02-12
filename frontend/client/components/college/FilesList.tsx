@@ -30,7 +30,7 @@ const FilesList: React.FC<FilesListProps> = ({ student, onClose, onUploadSuccess
     const fetchFiles = async () => {
         try {
             setLoading(true);
-            const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/student/${student.id}`);
+            const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/intern/${student.id}`);
 
             if (!response.ok) {
                 if (response.status === 404) {

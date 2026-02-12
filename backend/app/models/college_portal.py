@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Date
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Date,Enum
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.db.base_class import Base
+from app.models.enums import FileUploadStatus,FileType
 
 class CollegeStudent(Base):
     __tablename__ = "college_students"
@@ -23,11 +24,15 @@ class UploadedFile(Base):
     __tablename__ = "uploaded_files"
 
     id = Column(Integer, primary_key=True, index=True)
-    candidate_id = Column(Integer, ForeignKey("candidate.id"), nullable=False)
+    intern_id = Column(Integer, ForeignKey("intern.id"), nullable=False)
+    status = Column(Enum(FileUploadStatus),default = FileUploadStatus.PENDING)
+    feedback = Column(String,nullable = True)
+    file_type = Column(Enum(FileType),nullable = True)
     file_name = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     file_size = Column(Integer, nullable=False)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
+
 
 class StudentResume(Base):
     __tablename__ = "student_resumes"

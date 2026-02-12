@@ -28,7 +28,7 @@ const StudentDetail: React.FC<StudentDetailProps> = ({ student, onClose, onUploa
 
     const fetchFiles = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/student/${student.id}`);
+            const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/intern/${student.id}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     setFiles([]);

@@ -204,7 +204,7 @@ export default function Onboarding() {
         department: formData.department,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        status: "active",
+        status:"PENDING",
         address: formData.address,
         job_position: formData.job_position,
         salary: "25,000",

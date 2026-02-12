@@ -2,6 +2,8 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime, date
 from typing import List, Optional
 
+from app.models.enums import FileUploadStatus,FileType
+
 # --- Student Schemas ---
 class CollegeStudentBase(BaseModel):
     name: str
@@ -34,13 +36,20 @@ class CollegeStudent(CollegeStudentBase):
 
 # --- Uploaded File Schemas ---
 class UploadedFileBase(BaseModel):
-    candidate_id: int
+    intern_id: int
     file_name: str
     file_path: str
     file_size: int
+    status: FileUploadStatus = FileUploadStatus.PENDING
+    feedback: Optional[str] = None
+    file_type:FileType
 
 class UploadedFileCreate(UploadedFileBase):
     pass
+
+class UploadedFileUpdate(BaseModel):
+    status: Optional[FileUploadStatus] = None
+    feedback: Optional[str] = None
 
 class UploadedFile(UploadedFileBase):
     id: int

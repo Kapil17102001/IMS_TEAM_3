@@ -10,16 +10,20 @@ from pathlib import Path
 from app.services.text_extract import pdf_extraction_service
 from app.services.user_service import get_college_id_by_user_id
 
+
 from app import models
 from app.schemas.college_portal import (
     CollegeStudent as StudentSchema, 
     CollegeStudentCreate as StudentCreate,
     CollegeStudentUpdate as StudentUpdate,
     UploadedFile as FileSchema, 
+    UploadedFileUpdate,
     StudentResume as ResumeSchema
 )
 from app.api import deps
 from app.models.college_portal import CollegeStudent, UploadedFile, StudentResume
+from app.models.intern import Intern, InternStatus
+from app.models.enums import FileUploadStatus
 
 router = APIRouter()
 
@@ -112,22 +116,36 @@ def delete_student(
 
 @router.post("/upload")
 async def upload_files(
-    candidateId: int = Form(...),
+    userId: int = Form(...),
+    fileType:str = Form(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(deps.get_db)
 ) -> Any:
-    # Verify candidate exists
-    candidate = db.query(models.Candidate).filter(models.Candidate.id == candidateId).first()
-    if not candidate:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    # Get user to find internId
+    user = db.query(models.User).filter(models.User.id == userId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    intern_id = user.intern_id
+    if not intern_id:
+        raise HTTPException(status_code=400, detail="User is not associated with an intern profile")
 
+    # Get intern details to use name in filename
+    intern = db.query(models.Intern).filter(models.Intern.id == intern_id).first()
+    if not intern:
+        raise HTTPException(status_code=404, detail="Intern profile not found")
+    
+    # Sanitize name for filename
+    safe_name = intern.full_name.replace(" ", "_").lower()
+    
     uploaded_files_data = []
     for file in files:
         if not file.filename.lower().endswith('.pdf'):
             continue # Basic PDF check like in server.js
 
         file_ext = os.path.splitext(file.filename)[1]
-        unique_filename = f"offer-letter-{uuid.uuid4().hex}{file_ext}"
+        # Use name and fileType in the filename
+        unique_filename = f"{safe_name}-{fileType.lower()}-{uuid.uuid4().hex[:8]}{file_ext}"
         file_path = os.path.join(UPLOAD_DIR, unique_filename)
 
         # Save file to disk
@@ -137,14 +155,36 @@ async def upload_files(
         # Get file size
         file_size = os.path.getsize(file_path)
 
-        # Save to database
-        db_file = UploadedFile(
-            candidate_id=candidateId,
-            file_name=file.filename,
-            file_path=file_path,
-            file_size=file_size
-        )
-        db.add(db_file)
+        # Check for existing file of same type to replace
+        existing_file = db.query(UploadedFile).filter(
+            UploadedFile.intern_id == intern_id,
+            UploadedFile.file_type == fileType
+        ).first()
+
+        if existing_file:
+            # Delete old physical file
+            if os.path.exists(existing_file.file_path):
+                os.remove(existing_file.file_path)
+            
+            # Update existing record
+            existing_file.file_name = unique_filename
+            existing_file.file_path = file_path
+            existing_file.file_size = file_size
+            existing_file.status = FileUploadStatus.PENDING
+            existing_file.feedback = None
+            db_file = existing_file
+        else:
+            # Create new record
+            db_file = UploadedFile(
+                intern_id=intern_id,
+                file_name=unique_filename,
+                file_path=file_path,
+                file_size=file_size,
+                file_type = fileType,
+                status = FileUploadStatus.PENDING
+            )
+            db.add(db_file)
+        
         db.commit()
         db.refresh(db_file)
 
@@ -152,13 +192,16 @@ async def upload_files(
             "id": db_file.id,
             "fileName": db_file.file_name,
             "fileSize": db_file.file_size,
+            "status": db_file.status,
+            "feedback": db_file.feedback,
+            "fileType": db_file.file_type,
             "uploadedAt": db_file.uploaded_at
         })
 
     return {
         "message": f"{len(uploaded_files_data)} file(s) uploaded successfully",
         "data": {
-            "candidateId": candidateId,
+            "internId": intern_id,
             "files": uploaded_files_data
         }
     }
@@ -256,9 +299,21 @@ def delete_resume(resume_id: int, db: Session = Depends(deps.get_db)) -> Any:
 def get_all_uploads(db: Session = Depends(deps.get_db)) -> Any:
     return db.query(UploadedFile).order_by(UploadedFile.uploaded_at.desc()).all()
 
-@router.get("/uploads/student/{candidateId}", response_model=List[FileSchema])
-def get_student_uploads(candidateId: int, db: Session = Depends(deps.get_db)) -> Any:
-    return db.query(UploadedFile).filter(UploadedFile.candidate_id == candidateId).order_by(UploadedFile.uploaded_at.desc()).all()
+@router.get("/uploads/intern/{internId}", response_model=List[FileSchema])
+def get_intern_uploads(internId: int, db: Session = Depends(deps.get_db)) -> Any:
+    return db.query(UploadedFile).filter(UploadedFile.intern_id == internId).order_by(UploadedFile.uploaded_at.desc()).all()
+
+@router.get("/uploads/user/{userId}", response_model=List[FileSchema])
+def get_user_uploads(userId: int, db: Session = Depends(deps.get_db)) -> Any:
+    user = db.query(models.User).filter(models.User.id == userId).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    intern_id = user.intern_id
+    if not intern_id:
+        return []
+        
+    return db.query(UploadedFile).filter(UploadedFile.intern_id == intern_id).order_by(UploadedFile.uploaded_at.desc()).all()
 
 @router.get("/uploads/download/{id}")
 def download_file(id: int, db: Session = Depends(deps.get_db)):
@@ -289,6 +344,37 @@ def download_resume(resume_id: int, db: Session = Depends(deps.get_db)):
         filename=db_resume.file_name,
         media_type='application/pdf'
     )
+
+@router.put("/uploads/{id}", response_model=FileSchema)
+def update_upload(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    upload_in: UploadedFileUpdate
+) -> Any:
+    db_file = db.query(UploadedFile).filter(UploadedFile.id == id).first()
+    if not db_file:
+        raise HTTPException(status_code=404, detail="Upload not found")
+
+    update_data = upload_in.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(db_file, field, value)
+
+    db.add(db_file)
+    db.commit()
+    db.refresh(db_file)
+
+    # Check and update intern status if all 5 documents are now verified
+    if db_file.status == FileUploadStatus.VERIFIED:
+        all_files = db.query(UploadedFile).filter(UploadedFile.intern_id == db_file.intern_id).all()
+        if len(all_files) == 5 and all(f.status == FileUploadStatus.VERIFIED for f in all_files):
+            intern = db.query(Intern).filter(Intern.id == db_file.intern_id).first()
+            if intern and intern.status == InternStatus.PENDING:
+                intern.status = InternStatus.ACTIVE
+                db.add(intern)
+                db.commit()
+
+    return db_file
 
 @router.delete("/uploads/{id}")
 def delete_upload(id: int, db: Session = Depends(deps.get_db)):

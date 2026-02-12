@@ -174,7 +174,7 @@ export default function Candidates() {
     setIsFileViewModalOpen(true);
     setIsLoadingFiles(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/student/${candidate.id}`, {
+      const response = await fetch(`http://localhost:8000/api/v1/college-portal/uploads/intern/${candidate.id}`, {
         headers: {
           "Accept": "application/json",
         },
@@ -310,9 +310,9 @@ export default function Candidates() {
                       <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
+                      {/* <th className="px-6 py-3 text-center text-sm font-semibold text-foreground">
                         Actions
-                      </th>
+                      </th> */}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border">
@@ -337,9 +337,9 @@ export default function Candidates() {
                           <td className="px-6 py-4 text-sm text-foreground">{candidate.university}</td>
                           <td className="px-6 py-4 text-sm text-foreground">{candidate.address}</td>
                           <td className="px-6 py-4 text-center">{getStatusBadge(candidate.status)}</td>
-                          <td className="px-6 py-4">
+                          {/* <td className="px-6 py-4">
                             <div className="flex items-center justify-center gap-2">
-                              {/* View Files Button */}
+                             
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -353,7 +353,7 @@ export default function Candidates() {
                                 View Files
                               </Button>
 
-                              {/* Upload Button */}
+                             
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -367,7 +367,7 @@ export default function Candidates() {
                                 Upload
                               </Button>
                             </div>
-                          </td>
+                          </td> */}
                         </tr>
                       ))
                     ) : (

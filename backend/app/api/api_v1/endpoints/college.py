@@ -5,6 +5,10 @@ from app.api import deps
 from app.schemas.college import College, CollegeCreate, CollegeUpdate
 from app.services.college_service import college_service
 from app.services.email_service import email_service
+import secrets
+import string
+from app.models.user import User, UserRole
+from app.services.user_service import get_password_hash
 
 router = APIRouter()
 
@@ -35,67 +39,103 @@ async def create_college(
             detail="A college with this email already exists."
         )
 
-    try:
-        # Create the college in the database
-        new_college = college_service.create_college(db=db, college_in=college_in)
+    # Create the college in the database
+    new_college = college_service.create_college(db=db, college_in=college_in)
 
-        # Send email to the college
+    # Generate secure random password
+    alphabet = string.ascii_letters + string.digits
+    raw_password = ''.join(secrets.choice(alphabet) for i in range(12))
+    
+    # Create User for the College
+    new_user = User(
+        username=college_in.college_name.replace(" ", "_").lower(),
+        email=college_in.email,
+        hashed_password=get_password_hash(raw_password),
+        role=UserRole.COLLEGE,
+        college_id=new_college.id
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    try:
+        # Send eye-catchy invitation email to the college
         email_body = f"""
         <!DOCTYPE html>
         <html>
         <head>
             <style>
-                body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                .greeting {{ margin-bottom: 20px; }}
-                .content {{ margin-bottom: 15px; }}
-                ul {{ margin: 15px 0; padding-left: 25px; }}
-                li {{ margin: 8px 0; }}
-                .signature {{ margin-top: 30px; }}
-                .signature p {{ margin: 5px 0; }}
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+                body {{ font-family: 'Plus Jakarta Sans', sans-serif; line-height: 1.6; color: #1e293b; background-color: #f8fafc; margin: 0; padding: 0; }}
+                .wrapper {{ padding: 40px 20px; }}
+                .container {{ max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }}
+                .header {{ background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%); padding: 40px 40px; text-align: center; color: white; }}
+                .header h1 {{ margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.025em; }}
+                .content {{ padding: 40px; }}
+                .greeting {{ font-size: 20px; font-weight: 600; color: #0f172a; margin-bottom: 24px; }}
+                .message {{ color: #475569; margin-bottom: 32px; font-size: 16px; }}
+                .credentials-box {{ 
+                    background: #f1f5f9; 
+                    border-radius: 16px; 
+                    padding: 24px; 
+                    margin-bottom: 32px; 
+                    border: 1px solid #e2e8f0;
+                }}
+                .credential-row {{ margin-bottom: 12px; }}
+                .credential-row:last-child {{ margin-bottom: 0; }}
+                .label {{ font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; display: block; }}
+                .value {{ font-family: 'JetBrains Mono', monospace; font-size: 16px; color: #0f172a; font-weight: 600; }}
+                .cta {{ display: block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 16px 32px; border-radius: 12px; font-weight: 700; text-align: center; margin-bottom: 32px; transition: background 0.2s; }}
+                .features {{ margin-bottom: 32px; }}
+                .feature-item {{ list-style: none; padding-left: 0; margin-bottom: 12px; display: flex; align-items: center; color: #475569; font-size: 15px; }}
+                .feature-bullet {{ color: #2563eb; font-weight: bold; margin-right: 12px; font-size: 18px; }}
+                .footer {{ background: #f8fafc; padding: 32px 40px; border-top: 1px solid #e2e8f0; font-size: 14px; color: #64748b; }}
+                .signature-name {{ font-weight: 700; color: #0f172a; margin-bottom: 4px; }}
             </style>
         </head>
         <body>
-            <div class="container">
-                <div class="greeting">
-                    <p>Dear {college_in.college_name},</p>
-                </div>
-                
-                <div class="content">
-                    <p>Greetings from <strong>Wissen Technology</strong>.</p>
-                </div>
-                
-                <div class="content">
-                    <p>We are planning to conduct a recruitment drive and would like to invite your institution to participate in our hiring process.</p>
-                </div>
-                
-                <div class="content">
-                    <p>To proceed, we request the placement team to sign up on our hiring portal: <strong>WWW.wissen.com</strong>. Once registered, you will be able to:</p>
-                    <ul>
-                        <li>Shortlist 100 eligible students as per your internal criteria</li>
-                        <li>Upload the resumes of the shortlisted students on our portal</li>
-                        <li>Enable us to schedule and conduct interviews for the selected candidates</li>
-                    </ul>
-                </div>
-                
-                <div class="content">
-                    <p>After the resumes are uploaded, our hiring team will review the profiles and share the next steps regarding interview timelines.</p>
-                </div>
-                
-                <div class="content">
-                    <p>For any queries or assistance, please feel free to reach out to us at <strong>www.wissen.com</strong>.</p>
-                </div>
-                
-                <div class="content">
-                    <p>We look forward to collaborating with your institution.</p>
-                </div>
-                
-                <div class="signature">
-                    <p>Warm regards,</p>
-                    <p><strong>Abhay</strong><br>
-                    Senior Software Engineer<br>
-                    Wissen Technology<br>
-                    +91 0000000</p>
+            <div class="wrapper">
+                <div class="container">
+                    <div class="header">
+                        <h1>Recruitment Drive 2026</h1>
+                    </div>
+                    
+                    <div class="content">
+                        <p class="greeting">Dear {college_in.college_name},</p>
+                        
+                        <p class="message">
+                            It is our pleasure to invite your institution to collaborate with <strong>Wissen Technology</strong> for our upcoming recruitment cycle. We are looking for the brightest minds to join our journey.
+                        </p>
+
+                        <div class="credentials-box">
+                            <div class="credential-row">
+                                <span class="label">Portal Login Email</span>
+                                <span class="value">{college_in.email}</span>
+                            </div>
+                            <div class="credential-row">
+                                <span class="label">Temporary Password</span>
+                                <span class="value" style="color: #2563eb;">{raw_password}</span>
+                            </div>
+                        </div>
+
+                        <a href="https://wissen.com/hiring-portal" class="cta">Log In to Portal</a>
+
+                        <div class="features">
+                            <div class="feature-item"><span class="feature-bullet">✓</span> Nominate top 100 eligible students</div>
+                            <div class="feature-item"><span class="feature-bullet">✓</span> Seamlessly upload student resumes</div>
+                            <div class="feature-item"><span class="feature-bullet">✓</span> Real-time tracking of candidate status</div>
+                        </div>
+
+                        <p class="message" style="margin-bottom: 0;">
+                            Our hiring team is ready to review your nominees and proceed with interview scheduling immediately.
+                        </p>
+                    </div>
+                    
+                    <div class="footer">
+                        <div class="signature-name">Abhay</div>
+                        <div>Senior Software Engineer</div>
+                        <div>Wissen Technology</div>
+                    </div>
                 </div>
             </div>
         </body>
@@ -104,12 +144,12 @@ async def create_college(
 
         await email_service.send_email(
             email_to=[college_in.email],
-            subject="Invitation to Participate in Recruitment Drive",
+            subject="Invitation: Partner with Wissen Technology for Placements",
             html_content=email_body
         )
 
     except Exception as e:
-        print(f"Warning: Failed to send email: {str(e)}")
+        print(f"Warning: Failed to create user or send email: {str(e)}")
 
     return new_college
 

@@ -52,6 +52,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const internNavItems = [
     { label: "Planner", href: "/planner", icon: CheckSquare },
     { label: "Tasks", href: "/tasks", icon: ClipboardList },
+    { label: "Documents", href: "/documents", icon: BookOpen },
   ];
 
   const panelNavItems = [

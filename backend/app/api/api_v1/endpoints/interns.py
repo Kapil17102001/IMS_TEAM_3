@@ -7,6 +7,11 @@ from app.services.intern_service import intern_service
 from app.services.document_service import generate_internship_letter,generate_offer_letter
 from datetime import date, datetime
 from app.services.email_service import email_service
+import secrets
+import string
+from app.models.user import User, UserRole
+from app.services.user_service import get_password_hash
+
 router = APIRouter()
 
 @router.get("/", response_model=List[Intern])
@@ -59,14 +64,64 @@ async def create_intern(
         "job_position": created_intern.job_position,
     }
 
+    # Generate secure random password
+    alphabet = string.ascii_letters + string.digits
+    raw_password = ''.join(secrets.choice(alphabet) for i in range(12))
+    
+    # Create User for the Intern
+    # Generate a unique username based on name
+    base_username = created_intern.full_name.replace(" ", "_").lower()
+    unique_username = f"{base_username}_{secrets.token_hex(2)}"
+    
+    new_user = User(
+        username=unique_username,
+        email=created_intern.email,
+        hashed_password=get_password_hash(raw_password),
+        role=UserRole.INTERN,
+        intern_id=created_intern.id
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
     try:
         generate_offer = generate_offer_letter(intern_data)
         generate_internship = generate_internship_letter(intern_data)
 
+        email_html = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; rounded: 10px;">
+            <h2 style="color: #2563eb;">Welcome to the Team, {created_intern.full_name}!</h2>
+            <p>Congratulations on your internship. We are excited to have you on board.</p>
+            
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; font-size: 16px;">Step 1: Your Account Access</h3>
+                <p style="margin-bottom: 5px;">Your portal account has been created. Please use the following credentials to log in:</p>
+                <p><strong>Email:</strong> {created_intern.email}</p>
+                <p><strong>Password:</strong> <span style="font-family: monospace; background: #fff; padding: 2px 5px; border: 1px solid #ccc;">{raw_password}</span></p>
+            </div>
+
+            <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <h3 style="margin-top: 0; font-size: 16px;">Step 2: Document Verification</h3>
+                <p>Please log in to the portal and upload the following documents for verification:</p>
+                <ul style="font-size: 14px;">
+                    <li>Aadhar Card</li>
+                    <li>PAN Card</li>
+                    <li>Matriculation Certificate</li>
+                    <li>Intermediate Certificate</li>
+                    <li>Degree Certificate</li>
+                </ul>
+            </div>
+
+            <p style="font-size: 14px; color: #666;">Attached to this email are your official <strong>Offer Letter</strong> and <strong>Internship Letter</strong>.</p>
+            
+            <p>Best Regards,<br>HR Team</p>
+        </div>
+        """
+
         await email_service.send_email(
             email_to=[intern_in.email],
-            subject=f"Offer letter for {intern_in.full_name}",
-            html_content=f"<p>Dear {intern_in.full_name},</p><p>Please find attached your offer and internship letters.</p>",
+            subject=f"Congratulations! Your Onboarding is in Progress - {created_intern.full_name}",
+            html_content=email_html,
             attachments=[generate_offer, generate_internship]
         )
     

@@ -26,6 +26,8 @@ import Login from "./pages/Login";
 import ResumeUpload from "./pages/ResumeUpload";
 import CollegePortal from "./pages/CollegePortal";
 import InternTasks from "./pages/InternTasks";
+import InternDocuments from "./pages/InternDocuments";
+
 
 const queryClient = new QueryClient();
 
@@ -66,12 +68,14 @@ const CollegeRoutes = ({ lastPath }: { lastPath: string | null }) => {
 };
 
 const InternRoutes = ({ lastPath }: { lastPath: string | null }) => {
-  const defaultPath = lastPath === "/planner" ? lastPath : "/planner";
+  const validPaths = ["/planner", "/documents"];
+  const defaultPath = lastPath && validPaths.includes(lastPath) ? lastPath : "/planner";
 
   return (
     <Routes>
       <Route path="/planner" element={<Planner />} />
       <Route path="/tasks" element={<InternTasks />} />
+      <Route path="/documents" element={<InternDocuments />} />
       <Route path="*" element={<Navigate to={defaultPath} replace />} />
     </Routes>
   );
