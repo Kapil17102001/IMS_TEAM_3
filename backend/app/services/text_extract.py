@@ -3,7 +3,7 @@ import pdfplumber
 import logging
 import os
 import json
-from openai import OpenAI
+import httpx
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.services.candidate_service import CandidateService
@@ -21,8 +21,9 @@ class PDFExtractionService:
     BASE_RESUME_PATH = os.path.join(os.path.dirname(__file__), "..", "..", "documents", "resume")
 
     def __init__(self):
-        # Initialize OpenAI client with API key from config
-        self.llm_client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        # Initialize API credentials for apifreellm
+        self.api_key = settings.API_KEY
+        self.api_url = "https://apifreellm.com/api/v1/chat"
         self.candidate_service = CandidateService()
         self.college_service = CollegeService()  # Initialize CollegeService
 
@@ -148,7 +149,7 @@ class PDFExtractionService:
 
     def _process_with_llm(self, resume_text: str) -> dict:
         """
-        Process resume text using OpenAI GPT-4.1-mini to extract candidate information, including skills.
+        Process resume text using apifreellm to extract candidate information.
 
         :param resume_text: Extracted text from resume
         :return: Dictionary with candidate information matching Candidate schema
@@ -179,25 +180,44 @@ Example format:
 }}
 """
 
-            # Call OpenAI API
-            response = self.llm_client.chat.completions.create(
-                model="gpt-4.1-mini",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert at extracting structured information from resumes. Return only valid JSON."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.3,
-                response_format={"type": "json_object"}
-            )
+            # Call apifreellm API
+            headers = {
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {self.api_key}"
+            }
+            payload = {
+                "message": prompt,
+                "model": "apifreellm"
+            }
 
-            # Extract and parse the response
-            content = response.choices[0].message.content
+            import httpx  # Ensure httpx is available
+            with httpx.Client() as client:
+                response = client.post(
+                    self.api_url,
+                    headers=headers,
+                    json=payload,
+                    timeout=60.0 # Increased timeout for LLM
+                )
+                response.raise_for_status()
+                api_response = response.json()
+
+            # Based on user description, data is in 'response' field
+            content = api_response.get("response", "")
+            
+            if not content and "message" in api_response:
+                content = api_response.get("message", "")
+
+            # Clean up the response content in case it's wrapped in markdown code blocks
+            if isinstance(content, str):
+                if "```json" in content:
+                    content = content.split("```json")[1].split("```")[0].strip()
+                elif "```" in content:
+                    content = content.split("```")[1].split("```")[0].strip()
+            
+            if not content:
+                logger.error(f"Empty content from LLM. Full response: {api_response}")
+                return {}
+
             candidate_data = json.loads(content)
 
             # Ensure required fields and set defaults

@@ -29,6 +29,7 @@ class Settings(BaseSettings):
 
     # OPENAI CONFIGURATION
     OPENAI_API_KEY: str = ""
+    API_KEY: str = ""
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
