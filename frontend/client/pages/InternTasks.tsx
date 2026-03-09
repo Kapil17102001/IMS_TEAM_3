@@ -42,7 +42,7 @@ export default function InternTasks() {
                 setTasks(response.data);
             } catch (err: any) {
                 console.error("Error fetching tasks:", err);
-                const errorMessage = err.response?.data?.detail || "Failed to load tasks. Please try again later.";
+              //  const errorMessage = err.response?.data?.detail || "Failed to load tasks. Please try again later.";
 
                 // If 404, it might just mean no tasks found, which we can treat as empty list if the messaging supports it,
                 // but the backend throws 404 for "No tasks found".
