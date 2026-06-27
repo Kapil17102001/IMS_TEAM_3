@@ -1,12 +1,12 @@
-# 🚀 Intern Management System (IMS)
+# 🚀 AI-powered recruitment automation platform
 
-A **scalable, AI-ready Intern Management System** designed to manage the complete lifecycle of interns — from onboarding to evaluation — with structured data, documents, and future-ready AI capabilities.
+A **scalable, AI-ready Intern Recuritment System** designed to manage the complete lifecycle of interns — from onboarding to evaluation — with structured data, documents, and future-ready AI capabilities.
 
 ---
 
 ## ✨ Overview
 
-The **Intern Management System (IMS)** is a centralized platform that helps organizations efficiently manage intern data, documents, and workflows. It is built with **modern backend practices**, **clean data architecture**, and is **ready for AI-powered features like RAG-based chatbots**.
+The **AI-powered Intern recruitment Platform** is a centralized platform that helps organizations efficiently manage intern data, documents, and workflows. It is built with **modern backend practices**, **clean data architecture**, and is **ready for AI-powered features like RAG-based chatbots**.
 
 IMS supports:
 - Structured intern profiles
